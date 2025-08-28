@@ -1,0 +1,35 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { actions } from "astro:actions";
+
+// Call the health action server-side
+const healthResult = await Astro.callAction(actions.getHealth, {});
+const dbMode = healthResult?.data?.dbMode || 'unknown';
+const ok = healthResult?.data?.ok !== false;
+---
+
+<Layout title="Health" description="Application health status" showFooter={false}>
+    <main class="flex flex-col items-center justify-center flex-1 px-6 py-10 text-white bg-gray-900">
+        <h1 class="text-3xl font-bold mb-6 text-purple-400">Health Status</h1>
+
+        <div class="bg-gray-800 rounded-lg shadow p-6 w-full max-w-md flex flex-col gap-5">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-300">API / Actions</span>
+                <span class={`px-3 py-1 rounded text-sm font-medium ${ok ? 'bg-green-600' : 'bg-red-600'}`}>{ok ? 'OK' : 'ERROR'}</span>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <span class="text-gray-300">Database Mode</span>
+                <span class={`px-3 py-1 rounded text-sm font-medium ${dbMode === 'turso' ? 'bg-indigo-600' : dbMode === 'local' ? 'bg-yellow-600 text-gray-900' : 'bg-gray-600'}`}>{dbMode}</span>
+            </div>
+
+            <p class="text-xs text-gray-500 leading-relaxed">
+                This page uses the <code class="text-purple-400">getHealth</code> action. When Turso env vars are absent, the app falls back to the local <code class="text-purple-400">dev.db</code> SQLite file.
+            </p>
+        </div>
+
+        <script>
+            // Client-side refresh button (optional future enhancement)
+        </script>
+    </main>
+</Layout>

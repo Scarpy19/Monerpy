@@ -9,29 +9,30 @@
   "engines": {
     "node": "22"
   },
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "init": "pnpm install && prisma generate",
+    "initial": "pnpm install && prisma generate --no-hints",
     "dev": "astro dev",
     "deve": "astro dev --host",
-    "build": "prisma generate && astro check && astro build",
+    "build": "prisma generate --no-hints && astro check && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",
-    "@astrojs/vercel": "^8.2.3",
-    "@libsql/client": "^0.15.10",
-    "@prisma/adapter-libsql": "^6.13.0",
-    "@prisma/client": "6.13.0",
-    "@tailwindcss/vite": "^4.1.11",
-    "astro": "^5.12.5",
-    "tailwindcss": "^4.1.11",
-    "typescript": "^5.8.3"
+    "@astrojs/vercel": "^8.2.6",
+    "@libsql/client": "^0.15.14",
+    "@prisma/adapter-libsql": "^6.15.0",
+    "@prisma/client": "^6.15.0",
+    "@tailwindcss/vite": "^4.1.12",
+    "astro": "^5.13.4",
+    "tailwindcss": "^4.1.12",
+    "typescript": "^5.9.2"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@prisma/client",
       "esbuild"
     ],
     "ignoredBuiltDependencies": [
@@ -39,7 +40,7 @@
     ]
   },
   "devDependencies": {
-    "prisma": "^6.13.0",
-    "tsx": "^4.20.3"
+    "prisma": "^6.15.0",
+    "tsx": "^4.20.5"
   }
 }

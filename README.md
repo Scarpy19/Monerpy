@@ -176,3 +176,67 @@ This project is licensed under the Creative Commons Attribution-NonCommercial-Sh
 favicon.ico Image from [Dead Cells](https://deadcells.com) by [Motion Twin](https://motiontwin.com), licensed under CC BY-NC-SA 4.0
 
 SVG icons from [Mono icons](https://icons.mono.company/) licensed under MIT License.
+
+---
+
+## Environment Setup
+
+Monerpy can run in two modes for the database layer:
+
+1. Local (default fallback) using the bundled SQLite file `prisma/dev.db`.
+2. Turso (remote LibSQL) when the Turso environment variables are provided.
+
+### Variables
+
+Define these in a `.env` file (Astro + Vite automatically loads them) or in your hosting provider dashboard:
+
+```
+SECRET_TURSO_DATABASE_URL="libsql://YOUR-DATABASE-URL"
+SECRET_TURSO_AUTH_TOKEN="YOUR_TURSO_AUTH_TOKEN"
+```
+
+If they are NOT set, the app logs a warning and transparently uses the local SQLite database.
+
+### Development (Local SQLite)
+
+1. Install deps: `pnpm install`
+2. Generate Prisma Client: `pnpm prisma generate`
+3. (Optional) Seed data: `pnpm exec node prisma/seed.js`
+4. Start dev server: `pnpm dev`
+
+You will see a toast: “Running with local SQLite dev.db (Turso env vars not set).”
+
+### Development with Turso
+
+1. Install Turso CLI (follow Turso docs) and create a database:
+  ```
+  turso db create monerpy-dev
+  turso db tokens create monerpy-dev
+  ```
+2. Copy the database URL (looks like `libsql://monerpy-dev-<hash>.turso.io`) and auth token.
+3. Create `.env` file:
+  ```
+  SECRET_TURSO_DATABASE_URL=libsql://monerpy-dev-<hash>.turso.io
+  SECRET_TURSO_AUTH_TOKEN=XXXXXXXX
+  ```
+4. Run migrations locally against Turso (optional: script can be added later). For now the schema uses driverAdapters so Prisma will connect via the adapter at runtime.
+5. Start dev server: `pnpm dev` (toast will disappear when env vars are detected).
+
+### Production
+
+1. Provision a Turso database (or reuse one) and set the two env vars in your hosting platform.
+2. Deploy the app (e.g. Vercel) ensuring `pnpm prisma generate` runs during build.
+3. No schema change is needed—runtime detection switches to Turso automatically.
+
+### Switching Modes
+
+Remove or add the Turso env vars and restart the dev server. The app auto-selects the appropriate mode; no code changes required.
+
+### Verifying Mode
+
+Open the browser dev tools console or server logs:
+
+* Local mode: `[Config] Turso env vars missing. Falling back to local SQLite dev.db`
+* Turso mode: No fallback warning; you can add an optional log if needed.
+
+---

@@ -49,7 +49,7 @@ const authMiddleware = defineMiddleware(async (context, next) => {
     }
 
     // Define public paths that don't require authentication
-    const publicPaths = ['/', '/login', '/newaccount'];
+    const publicPaths = ['/', '/login', '/newaccount', '/health'];
     const isPublicPath = publicPaths.includes(url.pathname);
     const isActionEndpoint = url.pathname.startsWith('/_actions/');
 

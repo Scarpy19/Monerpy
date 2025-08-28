@@ -4,6 +4,8 @@ import Login from "@comps/svgs/mono/Login.astro";
 import Layout from "@layouts/Layout.astro";
 import Home from "@comps/svgs/mono/Home.astro";
 import CSRFToken from "@comps/CSRFToken.astro";
+import ToastScript from "@comps/toast/ToastScript.astro";
+import { missingTursoConfig } from "@prisma/index.js";
 
 // Check if user is authenticated via the new middleware system
 const user = Astro.locals.user;
@@ -53,3 +55,10 @@ const user = Astro.locals.user;
 		}
 	</div>
 </Layout>
+{missingTursoConfig && (
+	<ToastScript
+		message="Running with local SQLite dev.db (Turso env vars not set)."
+		type="warning"
+		duration={15000}
+	/>
+)}

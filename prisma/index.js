@@ -15,22 +15,27 @@ const urlenv =
 const authTokenEnv =
     import.meta.env.SECRET_TURSO_AUTH_TOKEN || process.env.SECRET_TURSO_AUTH_TOKEN;
 
-if (!urlenv || !authTokenEnv)
+// Flag to allow the rest of the app to know if DB config is present
+const missingTursoConfig = !urlenv || !authTokenEnv;
+
+/** @type {import('@prisma/client').PrismaClient} */
+let prisma;
+let dbMode = 'local'; // 'local' | 'turso'
+
+if (missingTursoConfig)
 {
-    throw new Error('Missing Turso database configuration');
+    // Local fallback (uses datasource in schema.prisma -> file:./dev.db)
+    console.warn('[Config] Turso env vars missing. Falling back to local SQLite file dev.db');
+    prisma = new PrismaClient();
+}
+else
+{
+    const adapter = new PrismaLibSQL({
+        url: urlenv,
+        authToken: authTokenEnv
+    });
+    prisma = new PrismaClient({ adapter });
+    dbMode = 'turso';
 }
 
-const adapter = new PrismaLibSQL(
-{
-    url: urlenv,
-    authToken: authTokenEnv
-});
-const prisma = new PrismaClient(
-{
-    adapter
-});
-
-export
-{
-    prisma
-};
+export { prisma, missingTursoConfig, dbMode };

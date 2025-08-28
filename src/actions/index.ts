@@ -68,6 +68,7 @@ import {
     bulkRestoreTags,
     bulkPurgeTags
 } from "./tags/index.ts";
+import { getHealth } from "./health/read.ts";
 
 const server = {
     login,
@@ -126,6 +127,7 @@ const server = {
     purgeTag,
     bulkRestoreTags,
     bulkPurgeTags
+    ,getHealth
 };
 
 export { server };
