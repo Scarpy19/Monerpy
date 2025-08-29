@@ -11,7 +11,7 @@ const createTransaction = defineAction({
         date: z.string().min(1, "Date is required."),
         name: z.string().trim().min(1, "Transaction name is required."),
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number."),
-        type: z.enum(['Income', 'Expense', 'InvestmentBuy', 'InvestmentSell', 'LoanPayment', 'LoanRepayment']),
+        type: z.enum(['Income', 'Expense']),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
         newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
         newCategoryColor: z.string().optional().default("#6172f3")
