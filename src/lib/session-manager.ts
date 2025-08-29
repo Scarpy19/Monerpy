@@ -111,6 +111,9 @@ export function loadSessionsFromFile(): void {
             }
 
             console.log(`Loaded ${sessions.size} valid sessions from file`);
+            // Persist only the valid (non-expired) sessions back to disk so expired ones are removed
+            // from the sessions.json file immediately at startup.
+            saveSessionsToFile();
         } else {
             console.log('Sessions file does not exist, starting with clean session storage');
         }
