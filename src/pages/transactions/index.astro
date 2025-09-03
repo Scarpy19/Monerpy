@@ -2,6 +2,7 @@
 import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import TransactionModal from "@comps/transaction/TransactionModal.astro";
+import EditTransactionModal from "@comps/transaction/EditTransactionModal.astro";
 import DeleteConfirmModal from "@comps/DeleteConfirmModal.astro";
 import { actions } from "astro:actions";
 import {
@@ -34,6 +35,7 @@ const accounts = accountsResult.data?.ok ? accountsResult.data.accounts : [];
 
 // Get data for the page only if user has accounts
 import type { Transaction, GetTransactionsResult } from "@types.d.ts";
+import Calendar from "@/components/svgs/mono/Calendar.astro";
 
 const transactionsResult =
     userInFamily && accounts && accounts.length > 0
@@ -121,25 +123,13 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
                                     <div class="bg-gray-750 rounded-xl p-6 shadow-lg border border-gray-700">
                                         <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-600">
                                             <div class="flex items-center gap-4">
-                                                <div class="bg-purple-600 rounded-full p-3">
-                                                    <svg
-                                                        class="w-5 h-5 text-white"
-                                                        fill="none"
-                                                        stroke="currentColor"
-                                                        viewBox="0 0 24 24"
-                                                    >
-                                                        <path
-                                                            stroke-linecap="round"
-                                                            stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                                        />
-                                                    </svg>
+                                                <div class="bg-purple-600 rounded-full p-2">
+                                                    <Calendar class="w-6 h-6 text-white" />
                                                 </div>
                                                 <div>
                                                     <h3 class="text-xl font-bold text-white">
                                                         {formatDateForDisplay(
-                                                            `${date} 00:00:00`,
+                                                            date,
                                                             {
                                                                 includeTime: false,
                                                                 dateStyle:
@@ -328,7 +318,38 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
                                                                     type="button"
                                                                     class="edit-btn bg-blue-600 hover:bg-blue-700 p-2 rounded-lg text-white transition duration-200 shadow-sm hover:shadow-md"
                                                                     data-transaction={JSON.stringify(
-                                                                        transaction,
+                                                                        {
+                                                                            ...(({
+                                                                                id,
+                                                                                accountId,
+                                                                                userId,
+                                                                                categoryId,
+                                                                                date,
+                                                                                name,
+                                                                                amount,
+                                                                                type,
+                                                                                updatedAt,
+                                                                                tags,
+                                                                            }) => ({
+                                                                                id,
+                                                                                accountId,
+                                                                                userId,
+                                                                                categoryId,
+                                                                                date,
+                                                                                name,
+                                                                                amount,
+                                                                                type,
+                                                                                updatedAt,
+                                                                                tags: tags?.map(
+                                                                                    (
+                                                                                        tag,
+                                                                                    ) =>
+                                                                                        tag.id,
+                                                                                ),
+                                                                            }))(
+                                                                                transaction,
+                                                                            ),
+                                                                        },
                                                                     )}
                                                                     title="Edit transaction"
                                                                 >
@@ -408,6 +429,7 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
     </main>
 
     <TransactionModal id="transactionModal" />
+    <EditTransactionModal id="editTransactionModal" />
     <DeleteConfirmModal title="Delete Transaction" />
 
     <script>
@@ -433,17 +455,29 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
             });
         }
 
-        // Edit functionality using the modal instance
+        // Edit functionality using the edit modal instance
+        const editModal = document.getElementById(
+            "editTransactionModal",
+        ) as any;
+
         document.querySelectorAll(".edit-btn").forEach((btn) => {
             btn.addEventListener("click", function (this: HTMLElement) {
                 const transactionData = this.dataset.transaction;
                 if (!transactionData) return;
 
                 const transaction = JSON.parse(transactionData);
-                if (
+
+                // transaction.tags is an array of tag ids per server payload
+                // The edit modal expects tx.tags to be an array of tag names or objects;
+                // We will pass the ids array and the modal will accept ids (it maps either strings or objects).
+
+                if (editModal && typeof editModal.openModal === "function") {
+                    editModal.openModal(transaction);
+                } else if (
                     transactionModal &&
                     typeof transactionModal.fillFormForEdit === "function"
                 ) {
+                    // fallback to previous behavior
                     transactionModal.fillFormForEdit(transaction);
                 }
             });
@@ -486,15 +520,19 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
                                     "Transaction deletion failed:",
                                     result.error || result.data?.error,
                                 );
-                                ToastService.error(
-                                    "Failed to delete transaction. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    message:
+                                        "Failed to delete transaction. Please try again.",
+                                    type: "error",
+                                });
                             }
                         } catch (error) {
                             console.error("Error deleting transaction:", error);
-                            ToastService.error(
-                                "Failed to delete transaction. Please try again.",
-                            );
+                            ToastService.showToast({
+                                message:
+                                    "Failed to delete transaction. Please try again.",
+                                type: "error",
+                            });
                         }
                     },
                 );

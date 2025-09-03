@@ -1,0 +1,546 @@
+---
+import X from "@svg/mono/X.astro";
+import Input from "@comps/Input.astro";
+import TypePicker from "@comps/TypePicker.astro";
+import Amount from "@comps/transaction/Amount.astro";
+import Account from "@comps/transaction/Account.astro";
+import Date from "@comps/transaction/Date.astro";
+import Category from "@comps/transaction/Category.astro";
+import TagsDropdownSelect from "@comps/tags/TagsDropdownSelect.astro";
+import ScriptSelect from "@comps/accounts/ScriptSelect.astro";
+
+interface Props {
+    id: string;
+}
+
+const { id } = Astro.props as Props;
+---
+
+<transaction-edit-modal id={id}>
+    <div
+        class="modal-root fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
+    >
+        <div
+            class="bg-gray-800 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        >
+            <header
+                class="flex items-end justify-between py-4.5 px-6 border-b border-gray-700"
+            >
+                <h2
+                    class="font-semibold text-purple-400 text-xl"
+                    id="modalTitle"
+                >
+                    Edit Transaction
+                </h2>
+                <button
+                    type="button"
+                    id="closeModalButton"
+                    class="text-gray-400 hover:text-white"
+                >
+                    <X class="w-6 h-6" />
+                </button>
+            </header>
+
+            <form
+                id="transactionForm"
+                class="p-6 flex flex-col gap-y-4"
+                novalidate
+            >
+                <input type="hidden" id="transactionId" name="id" />
+
+                <!-- Account and Name -->
+                <div class="flex items-center gap-x-4 justify-center">
+                    <Account id="accountId" classes="flex-1" />
+
+                    <Input
+                        id="name"
+                        label="Transaction Name"
+                        name="name"
+                        required={true}
+                        placeholder="Enter transaction name"
+                        classes="flex-1/3"
+                    />
+
+                    <ScriptSelect idSelect="accountId" />
+                </div>
+
+                <!-- Transaction Type and Amount -->
+                <div class="flex items-center gap-x-4 justify-center">
+                    <TypePicker classes="flex-1" />
+                    <Amount classes="flex-1/3" />
+                </div>
+
+                <div class="flex items-center gap-x-4 justify-center">
+                    <Category classes="flex-1" />
+                    <Date id="date" name="date" label="Date" />
+                </div>
+
+                <!-- Tags -->
+                <TagsDropdownSelect id="tags" name="tags" label="Tags" />
+
+                <!-- Hidden accountId copy for submission when select is disabled -->
+                <input type="hidden" id="accountIdHidden" name="accountId" />
+
+                <!-- Form Buttons -->
+                <div class="flex gap-3 pt-4">
+                    <div class="flex-3 text-right">
+                        <button
+                            type="button"
+                            id="cancelBtn"
+                            class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white transition duration-200"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                    <button
+                        type="submit"
+                        id="submitBtn"
+                        class="flex-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        <span id="submitBtnText">Save Changes</span>
+                        <span
+                            id="submitSpinner"
+                            class="hidden w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"
+                        ></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        import { getCurrentDateTimeLocal } from "@lib/date-utils.ts";
+
+        class EditTransactionModal extends HTMLElement {
+            connectedCallback() {
+                const modal = this.querySelector(
+                    ".modal-root",
+                ) as HTMLDivElement;
+                const closeModalButton = this.querySelector(
+                    "#closeModalButton",
+                ) as HTMLButtonElement;
+                const cancelBtn = this.querySelector(
+                    "#cancelBtn",
+                ) as HTMLButtonElement;
+
+                const dateInput = this.querySelector(
+                    "#date",
+                ) as HTMLInputElement;
+                const formTitle = this.querySelector(
+                    "#modalTitle",
+                ) as HTMLHeadingElement;
+                const submitText = this.querySelector(
+                    "#submitBtnText",
+                ) as HTMLSpanElement;
+                const submitBtn = this.querySelector(
+                    "#submitBtn",
+                ) as HTMLButtonElement;
+                const submitSpinner = this.querySelector(
+                    "#submitSpinner",
+                ) as HTMLSpanElement;
+                const form = this.querySelector(
+                    "#transactionForm",
+                ) as HTMLFormElement;
+
+                let focusable: HTMLElement[] = [];
+                let firstFocusable: HTMLElement | null = null;
+                let lastFocusable: HTMLElement | null = null;
+
+                const accountId = this.querySelector(
+                    "#accountId",
+                ) as HTMLSelectElement;
+                const accountIdHidden = this.querySelector(
+                    "#accountIdHidden",
+                ) as HTMLInputElement;
+                const name = this.querySelector("#name") as HTMLInputElement;
+                const tagsHidden = this.querySelector(
+                    "#tagsHidden",
+                ) as HTMLInputElement;
+                const tagsDropdownRoots = this.querySelectorAll(
+                    "[data-tags-dropdown-root]",
+                ) as NodeListOf<HTMLDivElement>;
+
+                const computeFocusables = () => {
+                    const dialogPanel = this.querySelector(
+                        '[role="dialog"]',
+                    ) as HTMLElement;
+                    if (!dialogPanel) return;
+                    focusable = Array.from(
+                        dialogPanel.querySelectorAll<HTMLElement>(
+                            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+                        ),
+                    ).filter(
+                        (el) =>
+                            !el.hasAttribute("disabled") &&
+                            !el.getAttribute("aria-hidden"),
+                    );
+                    firstFocusable = focusable[0] || null;
+                    lastFocusable = focusable[focusable.length - 1] || null;
+                };
+
+                const openModal = (tx?: any) => {
+                    // tx is expected to be the transaction object
+                    try {
+                        if (tx) {
+                            // set hidden transaction id
+                            const txIdInput = this.querySelector(
+                                "#transactionId",
+                            ) as HTMLInputElement;
+                            if (txIdInput)
+                                txIdInput.value = String(tx.id ?? "");
+
+                            // Prefill account and make it read-only
+                            if (accountId) {
+                                accountId.value = String(tx.accountId ?? "");
+                                accountId.disabled = true; // read-only
+                                if (accountIdHidden)
+                                    accountIdHidden.value = String(
+                                        tx.accountId ?? "",
+                                    );
+                            }
+
+                            // Name
+                            if (name) name.value = tx.name ?? "";
+
+                            // Type (radio)
+                            if (tx.type) {
+                                const radios = Array.from(
+                                    this.querySelectorAll('input[name="type"]'),
+                                ) as HTMLInputElement[];
+                                const matching = radios.find(
+                                    (r) => r.value === tx.type,
+                                );
+                                if (matching) {
+                                    matching.checked = true;
+                                    matching.dispatchEvent(new Event("change"));
+                                }
+                            }
+
+                            // Amount
+                            const amount = this.querySelector(
+                                "#amount",
+                            ) as HTMLInputElement;
+                            if (amount)
+                                amount.value = tx.amount
+                                    ? String(tx.amount)
+                                    : "";
+
+                            // Category
+                            const category = this.querySelector(
+                                "#categoryId",
+                            ) as HTMLSelectElement;
+                            if (category)
+                                category.value = tx.categoryId
+                                    ? String(tx.categoryId)
+                                    : "";
+
+                            // Date
+                            if (dateInput)
+                                dateInput.value =
+                                    tx.date ?? getCurrentDateTimeLocal();
+
+                            // Tags: update hidden input and UI
+                            if (tagsHidden) {
+                                // tx.tags may be array of ids (numbers) or array of tag objects/names
+                                let tagsArray: string[] = [];
+
+                                if (Array.isArray(tx.tags)) {
+                                    const first = tx.tags[0];
+                                    if (
+                                        typeof first === "number" ||
+                                        (typeof first === "string" &&
+                                            String(first).match(/^\d+$/))
+                                    ) {
+                                        // resolve ids to names by querying dropdown items
+                                        const resolved: string[] = [];
+                                        tagsDropdownRoots.forEach((root) => {
+                                            const list = root.querySelector(
+                                                "div[id$='DropdownList']",
+                                            ) as HTMLDivElement;
+                                            if (!list) return;
+
+                                            tx.tags.forEach((tagId: any) => {
+                                                const selector = `[data-tag-id='${tagId}']`;
+                                                const el = list.querySelector(
+                                                    selector,
+                                                ) as HTMLDivElement | null;
+                                                if (el) {
+                                                    const nameAttr =
+                                                        el.getAttribute(
+                                                            "data-tag-name",
+                                                        );
+                                                    if (
+                                                        nameAttr &&
+                                                        !resolved.includes(
+                                                            nameAttr,
+                                                        )
+                                                    )
+                                                        resolved.push(nameAttr);
+                                                }
+                                            });
+                                        });
+
+                                        tagsArray = resolved;
+                                    } else {
+                                        tagsArray = tx.tags.map((t: any) =>
+                                            typeof t === "string" ? t : t.name,
+                                        );
+                                    }
+                                }
+
+                                tagsHidden.value = tagsArray.join(", ");
+
+                                // Update dropdown UI if present
+                                tagsDropdownRoots.forEach((root) => {
+                                    const labelSpan = root.querySelector(
+                                        "span[id$='DropdownLabel']",
+                                    ) as HTMLSpanElement;
+                                    const list = root.querySelector(
+                                        "div[id$='DropdownList']",
+                                    ) as HTMLDivElement;
+                                    if (!labelSpan || !list) return;
+
+                                    // Update label
+                                    labelSpan.textContent =
+                                        tagsArray.length > 0
+                                            ? tagsArray.join(", ")
+                                            : "Select tags";
+
+                                    // Update checks for items
+                                    list.querySelectorAll(
+                                        "[data-tag-name]",
+                                    ).forEach((item) => {
+                                        const el = item as HTMLDivElement;
+                                        const nameAttr =
+                                            el.getAttribute("data-tag-name");
+                                        const checkSpan = el.querySelector(
+                                            "span.check-tag",
+                                        ) as HTMLSpanElement;
+                                        if (!checkSpan) return;
+                                        if (
+                                            nameAttr &&
+                                            tagsArray.includes(nameAttr)
+                                        ) {
+                                            checkSpan.classList.remove(
+                                                "hidden",
+                                            );
+                                        } else {
+                                            checkSpan.classList.add("hidden");
+                                        }
+                                    });
+                                });
+                            }
+
+                            // set title and submit text
+                            if (formTitle)
+                                formTitle.textContent = "Edit Transaction";
+                            if (submitText)
+                                submitText.textContent = "Save Changes";
+                        }
+                    } catch (e) {
+                        console.error("Error prefilling edit modal", e);
+                    }
+
+                    if (modal) {
+                        modal.classList.remove("hidden");
+                        modal.classList.add("flex");
+                        document.body.style.overflow = "hidden";
+                        computeFocusables();
+                        if (name && typeof name.focus === "function")
+                            name.focus();
+                    }
+                };
+
+                const closeModal = () => {
+                    if (modal) {
+                        modal.classList.add("hidden");
+                        modal.classList.remove("flex");
+                        document.body.style.overflow = "auto";
+                        resetForm();
+                    }
+                };
+
+                const resetForm = async () => {
+                    if (formTitle) formTitle.textContent = "Edit Transaction";
+                    if (submitText) submitText.textContent = "Save Changes";
+                    if (form) form.reset();
+                    if (dateInput) dateInput.value = getCurrentDateTimeLocal();
+                    // restore saved account selection if possible
+                    try {
+                        const saved =
+                            window.localStorage.getItem("selectedAccountId");
+                        if (accountId && !saved) accountId.disabled = false; // allow selection when no saved
+                    } catch (e) {}
+
+                    if (tagsDropdownRoots && tagsDropdownRoots.length > 0) {
+                        tagsDropdownRoots.forEach((root) => {
+                            const anyRoot: any = root;
+                            if (typeof anyRoot.resetTags === "function") {
+                                try {
+                                    anyRoot.resetTags();
+                                } catch (_) {}
+                            }
+                        });
+                    }
+                    // clear hidden accountId
+                    if (accountIdHidden) accountIdHidden.value = "";
+                    const txIdInput = this.querySelector(
+                        "#transactionId",
+                    ) as HTMLInputElement;
+                    if (txIdInput) txIdInput.value = "";
+                };
+
+                if (closeModalButton)
+                    closeModalButton.addEventListener("click", closeModal);
+                if (cancelBtn) cancelBtn.addEventListener("click", closeModal);
+
+                if (form) {
+                    form.addEventListener("submit", async (e) => {
+                        e.preventDefault();
+
+                        const formData = new FormData(form);
+                        const csrfInput = document.querySelector(
+                            'input[name="_csrf_token"]',
+                        ) as HTMLInputElement;
+
+                        if (csrfInput && csrfInput.value) {
+                            formData.set("_csrf_token", csrfInput.value);
+                        }
+
+                        // ensure accountId is present even if select is disabled
+                        if (
+                            accountId &&
+                            accountId.disabled &&
+                            accountIdHidden
+                        ) {
+                            formData.set(
+                                "accountId",
+                                accountIdHidden.value || accountId.value,
+                            );
+                        }
+
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitSpinner?.classList.remove("hidden");
+                        }
+
+                        try {
+                            const { actions } = await import("astro:actions");
+                            const result =
+                                await actions.updateTransaction(formData);
+
+                            if (result?.data?.ok) {
+                                const { ToastService } = await import(
+                                    "@lib/toast.ts"
+                                );
+                                ToastService.success(
+                                    "Transaction updated successfully!",
+                                );
+                                closeModal();
+                                window.location.reload();
+                            } else {
+                                const { ToastService } = await import(
+                                    "@lib/toast.ts"
+                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "Failed to update transaction. Please try again.",
+                                });
+                                console.error(
+                                    "Transaction update failed:",
+                                    result?.error || result?.data?.error,
+                                );
+                            }
+                        } catch (error) {
+                            const { ToastService } = await import(
+                                "@lib/toast.ts"
+                            );
+                            ToastService.showToast({
+                                type: "error",
+                                message: "An error occurred. Please try again.",
+                            });
+                            console.error("Error updating transaction:", error);
+                        } finally {
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitSpinner?.classList.add("hidden");
+                            }
+                        }
+                    });
+                }
+
+                if (modal) {
+                    let downOutside = false;
+                    modal.addEventListener("mousedown", (e) => {
+                        if (
+                            e.target === modal &&
+                            (e as MouseEvent).button === 0
+                        ) {
+                            downOutside = true;
+                        } else {
+                            downOutside = false;
+                        }
+                    });
+                    modal.addEventListener("mouseup", (e) => {
+                        if (
+                            downOutside &&
+                            e.target === modal &&
+                            (e as MouseEvent).button === 0
+                        ) {
+                            closeModal();
+                        }
+                        downOutside = false;
+                    });
+                }
+
+                if (dateInput) dateInput.value = getCurrentDateTimeLocal();
+
+                (this as any).openModal = openModal;
+                (this as any).closeModal = closeModal;
+                (this as any).resetForm = resetForm;
+
+                if (accountId) {
+                    accountId.addEventListener("change", () => {
+                        try {
+                            window.localStorage.setItem(
+                                "selectedAccountId",
+                                accountId.value,
+                            );
+                        } catch (e) {}
+                    });
+                }
+
+                this.addEventListener("keydown", (e: KeyboardEvent) => {
+                    if (e.key === "Escape") {
+                        e.stopPropagation();
+                        closeModal();
+                        return;
+                    }
+                    if (e.key === "Tab") {
+                        computeFocusables();
+                        if (!firstFocusable || !lastFocusable) return;
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstFocusable) {
+                                e.preventDefault();
+                                lastFocusable.focus();
+                            }
+                        } else {
+                            if (document.activeElement === lastFocusable) {
+                                e.preventDefault();
+                                firstFocusable.focus();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        if (!customElements.get("transaction-edit-modal")) {
+            customElements.define(
+                "transaction-edit-modal",
+                EditTransactionModal,
+            );
+        }
+    </script>
+</transaction-edit-modal>
