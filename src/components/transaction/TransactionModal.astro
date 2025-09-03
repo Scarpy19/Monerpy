@@ -308,9 +308,10 @@ const { id } = Astro.props as Props;
                             const { ToastService } = await import(
                                 "@lib/toast.ts"
                             );
-                            ToastService.error(
-                                "An error occurred. Please try again.",
-                            );
+                            ToastService.showToast({
+                                message: "An error occurred. Please try again.",
+                                type: "error",
+                            });
                             console.error(
                                 "Error submitting transaction:",
                                 error,

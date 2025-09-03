@@ -435,9 +435,12 @@ const deletedMsg = [
                                     );
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk restore failed",
-                                );
+                                ToastService.showToast({
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk restore failed",
+                                    type: "error",
+                                });
                             }
                         } catch (err) {
                             console.error(err);
@@ -492,9 +495,12 @@ const deletedMsg = [
                                     );
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk purge failed",
-                                );
+                                ToastService.showToast({
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk purge failed",
+                                    type: "error",
+                                });
                             }
                         } catch (err) {
                             console.error(err);
@@ -548,13 +554,18 @@ const deletedMsg = [
                                         );
                                         window.location.reload();
                                     } else {
-                                        ToastService.error(
-                                            result.data?.error ||
+                                        ToastService.showToast({
+                                            message:
+                                                result.data?.error ||
                                                 "Failed to restore account",
-                                        );
+                                            type: "error",
+                                        });
                                     }
                                 } catch (err) {
-                                    ToastService.error("An error occurred.");
+                                    ToastService.showToast({
+                                        message: "An error occurred.",
+                                        type: "error",
+                                    });
                                 }
                             },
                         });
@@ -598,13 +609,25 @@ const deletedMsg = [
                                     );
                                     window.location.reload();
                                 } else {
-                                    ToastService.error(
-                                        result.data?.error ||
+                                    ToastService.showToast({
+                                        message:
+                                            result.data?.error ||
                                             "Failed to permanently delete account",
-                                    );
+                                        type: "error",
+                                    });
                                 }
                             } catch (err) {
-                                ToastService.error("An error occurred.");
+                                // Safely extract message from unknown error
+                                const msg =
+                                    err instanceof Error
+                                        ? err.message
+                                        : String(err);
+                                const errorMessage = `An error occurred. ${msg}`;
+                                ToastService.showToast({
+                                    message: errorMessage,
+                                    type: "error",
+                                });
+                                console.error(err);
                             }
                         },
                     });

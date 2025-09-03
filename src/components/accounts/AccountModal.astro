@@ -164,16 +164,21 @@ import AccountTypeSelect from "@comps/accounts/AccountTypeSelect.astro";
                     // Reload the page to show updated data
                     window.location.reload();
                 } else {
-                    ToastService.error(
-                        result.data?.error || "Failed to create account",
-                    );
+                    ToastService.showToast({
+                        type: "error",
+                        message:
+                            result.data?.error || "Failed to create account",
+                    });
                     console.error(
                         "Account creation failed:",
                         result.error || result.data?.error,
                     );
                 }
             } catch (error) {
-                ToastService.error("An error occurred. Please try again.");
+                ToastService.showToast({
+                    type: "error",
+                    message: "An error occurred. Please try again.",
+                });
                 console.error("Error creating account:", error);
             }
         }

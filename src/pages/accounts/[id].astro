@@ -323,16 +323,22 @@ const account = accountResult.data.account;
                     if (result.data?.ok) {
                         ToastService.success("Account updated successfully!");
                     } else {
-                        ToastService.error(
-                            result.data?.error || "Failed to update account",
-                        );
+                        ToastService.showToast({
+                            message:
+                                result.data?.error ||
+                                "Failed to update account",
+                            type: "error",
+                        });
                         console.error(
                             "Account update failed:",
                             result.error || result.data?.error,
                         );
                     }
                 } catch (error) {
-                    ToastService.error("An error occurred. Please try again.");
+                    ToastService.showToast({
+                        message: "An error occurred. Please try again.",
+                        type: "error",
+                    });
                     console.error("Error updating account:", error);
                 }
             });

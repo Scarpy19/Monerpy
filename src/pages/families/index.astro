@@ -340,13 +340,19 @@ const userRole = familyDetailsResult.data?.ok
           window.location.reload();
         } else {
           console.error("Error creating family:", data?.error);
-          ToastService.error(data?.error || "Failed to create family");
+          ToastService.showToast({
+            message: data?.error || "Failed to create family",
+            type: "error",
+          });
         }
       } catch (error) {
-        console.error("Error creating family:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Failed to create family";
-        ToastService.error(errorMessage);
+        const msg = error instanceof Error ? error.message : String(error);
+        const errorMessage = `An error occurred. ${msg}`;
+        ToastService.showToast({
+          message: errorMessage,
+          type: "error",
+        });
+        console.error(error);
       }
     });
 

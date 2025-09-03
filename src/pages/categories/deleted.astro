@@ -447,9 +447,12 @@ const deletedMsgs: string[] = [
                                 }
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk restore failed",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk restore failed",
+                                });
                             }
                         } catch (err) {
                             console.error(err);
@@ -504,11 +507,23 @@ const deletedMsgs: string[] = [
                                 }
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk purge failed",
-                                );
+                                ToastService.showToast({
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk purge failed",
+                                    type: "error",
+                                });
                             }
                         } catch (err) {
+                            const msg =
+                                err instanceof Error
+                                    ? err.message
+                                    : String(err);
+                            const errorMessage = `An error occurred. ${msg}`;
+                            ToastService.showToast({
+                                message: errorMessage,
+                                type: "error",
+                            });
                             console.error(err);
                         }
                     },
@@ -574,23 +589,28 @@ const deletedMsgs: string[] = [
                                     // Reload the page to show updated data
                                     window.location.reload();
                                 } else {
-                                    ToastService.error(
-                                        result.data?.error ||
+                                    ToastService.showToast({
+                                        type: "error",
+                                        message:
+                                            result.data?.error ||
                                             "Failed to restore category",
-                                    );
+                                    });
                                     console.error(
                                         "Category restore failed:",
                                         result.error || result.data?.error,
                                     );
                                 }
-                            } catch (error) {
-                                ToastService.error(
-                                    "An error occurred. Please try again.",
-                                );
-                                console.error(
-                                    "Error restoring category:",
-                                    error,
-                                );
+                            } catch (err) {
+                                const msg =
+                                    err instanceof Error
+                                        ? err.message
+                                        : String(err);
+                                const errorMessage = `An error occurred. ${msg}`;
+                                ToastService.showToast({
+                                    message: errorMessage,
+                                    type: "error",
+                                });
+                                console.error(err);
                             }
                         },
                     });
@@ -656,20 +676,28 @@ const deletedMsgs: string[] = [
                                     // Reload the page to show updated data
                                     window.location.reload();
                                 } else {
-                                    ToastService.error(
-                                        result.data?.error ||
+                                    ToastService.showToast({
+                                        message:
+                                            result.data?.error ||
                                             "Failed to permanently delete category",
-                                    );
+                                        type: "error",
+                                    });
                                     console.error(
                                         "Category purge failed:",
                                         result.error || result.data?.error,
                                     );
                                 }
                             } catch (error) {
-                                ToastService.error(
-                                    "An error occurred. Please try again.",
-                                );
-                                console.error("Error purging category:", error);
+                                const msg =
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error);
+                                const errorMessage = `An error occurred. ${msg}`;
+                                ToastService.showToast({
+                                    message: errorMessage,
+                                    type: "error",
+                                });
+                                console.error(error);
                             }
                         },
                     });

@@ -106,7 +106,10 @@ if (Astro.locals.user) {
             navigate(redirectTo);
           } else {
             console.error("Error logging in:", error || data?.error);
-            ToastService.error(data?.error || "Login failed");
+            ToastService.showToast({
+                message: data?.error || "Login failed",
+                type: "error",
+            });
           }
         } catch (error) {
           // Display error message to user
