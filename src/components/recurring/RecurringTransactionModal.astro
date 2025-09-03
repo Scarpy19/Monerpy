@@ -194,9 +194,11 @@ const modalId = Astro.props.id ?? null;
                                     placeholder="1-31"
                                     class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                                 />
-                                <p class="text-xs text-gray-400 mt-1 w-[125%]">
+                                <p
+                                    class="text-xs text-gray-400 mt-1 w-[125.86%]"
+                                >
                                     For months with fewer days, the last day of
-                                    the month will be used
+                                    the month will be used.
                                 </p>
                             </label>
 
@@ -607,7 +609,10 @@ const modalId = Astro.props.id ?? null;
                             );
                             const message =
                                 "Failed to update recurring transaction. Please try again.";
-                            ToastService.error(message);
+                            ToastService.showToast({
+                                type: "error",
+                                message,
+                            });
                             console.error(
                                 "Recurring transaction operation failed:",
                                 result?.error || result?.data?.error,
@@ -615,9 +620,10 @@ const modalId = Astro.props.id ?? null;
                         }
                     } catch (error) {
                         const { ToastService } = await import("@lib/toast.ts");
-                        ToastService.error(
-                            "An error occurred. Please try again.",
-                        );
+                        ToastService.showToast({
+                            type: "error",
+                            message: "An error occurred. Please try again.",
+                        });
                         console.error(
                             "Error submitting recurring transaction:",
                             error,

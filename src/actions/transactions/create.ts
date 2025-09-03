@@ -20,7 +20,6 @@ const createTransaction = defineAction({
         try {
             const user = context.locals.user;
 
-
             if (!user) {
                 return { ok: false, error: "Authentication required." };
             }
