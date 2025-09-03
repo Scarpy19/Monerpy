@@ -130,8 +130,18 @@ function getStatusColor(status: string): string {
 }
 
 // Helper function to get status text
-function getStatusText(status: string): string {
-    return RECURRING_TEXT_COLORS[status] || "Unknown";
+function getStatusText(startDate: string, endDate: string): string {
+    const now = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (now < start) {
+        return "Upcoming";
+    } else if (now > end) {
+        return "Completed";
+    } else {
+        return "In Progress";
+    }
 }
 ---
 
