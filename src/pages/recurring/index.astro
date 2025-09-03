@@ -130,14 +130,14 @@ function getStatusColor(status: string): string {
 }
 
 // Helper function to get status text
-function getStatusText(startDate: string, endDate: string): string {
+function getStatusText(startDate: string, endDate: string | null): string {
     const now = new Date();
     const start = new Date(startDate);
-    const end = new Date(endDate);
+    const end = endDate ? new Date(endDate) : null;
 
     if (now < start) {
         return "Upcoming";
-    } else if (now > end) {
+    } else if (end && now > end) {
         return "Completed";
     } else {
         return "In Progress";
@@ -238,7 +238,8 @@ function getStatusText(startDate: string, endDate: string): string {
                                                         class={`text-sm font-medium ${getStatusColor(recurringTransaction.status)}`}
                                                     >
                                                         {getStatusText(
-                                                            recurringTransaction.status,
+                                                            recurringTransaction.startDate,
+                                                            recurringTransaction.endDate,
                                                         )}
                                                     </div>
                                                 </div>
