@@ -3,7 +3,7 @@ import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
-import { formatDateForDisplay, formatCurrency } from "@lib/date-utils.ts";
+import { formatDate, formatCurrency } from "@lib/date-utils.ts";
 import Bin from "@comps/svgs/mono/Bin.astro";
 import CreditCard from "@comps/svgs/mono/CreditCard.astro";
 import { accountTypes } from "@arrays.d.ts";
@@ -144,7 +144,7 @@ const deletedMsg = [
 
                                             <p class="text-xs text-gray-500 mt-1">
                                                 Deleted on:{" "}
-                                                {formatDateForDisplay(
+                                                {formatDate(
                                                     account.deletedAt,
                                                     {
                                                         includeTime: true,

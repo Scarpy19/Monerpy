@@ -6,7 +6,7 @@ import EditTransactionModal from "@comps/transaction/EditTransactionModal.astro"
 import DeleteConfirmModal from "@comps/DeleteConfirmModal.astro";
 import { actions } from "astro:actions";
 import {
-    formatDateForDisplay,
+    formatDate,
     getDatePart,
     getTimePartWithoutSeconds,
     formatCurrency,
@@ -128,14 +128,10 @@ const sortedGroupedTransactions = Object.keys(groupedTransactions)
                                                 </div>
                                                 <div>
                                                     <h3 class="text-xl font-bold text-white">
-                                                        {formatDateForDisplay(
-                                                            date,
-                                                            {
-                                                                includeTime: false,
-                                                                dateStyle:
-                                                                    "long",
-                                                            },
-                                                        )}
+                                                        {formatDate(date, {
+                                                            includeTime: false,
+                                                            dateStyle: "long",
+                                                        })}
                                                     </h3>
                                                     <p class="text-sm text-gray-400">
                                                         {

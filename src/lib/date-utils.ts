@@ -4,26 +4,6 @@
 import { months } from "@arrays.d.ts";
 
 /**
- * Formats a datetime-local input value to "YYYY-MM-DD HH:mm:ss" format
- * @param datetimeLocal - The value from a datetime-local input (e.g., "2024-01-15T14:30")
- * @returns Formatted string "YYYY-MM-DD HH:mm:ss"
- */
-function formatDateTimeLocal(datetimeLocal: string): string {
-    // datetime-local format: "YYYY-MM-DDTHH:mm" or "YYYY-MM-DDTHH:mm:ss"
-    const parts = datetimeLocal.split('T');
-    if (parts.length !== 2) {
-        throw new Error('Invalid datetime-local format');
-    }
-
-    const [datePart, timePart] = parts;
-
-    // Ensure time has seconds
-    const timeWithSeconds = timePart.length === 5 ? `${timePart}:00` : timePart;
-
-    return `${datePart} ${timeWithSeconds}`;
-}
-
-/**
  * Formats a "YYYY-MM-DD HH:mm:ss" string to datetime-local input format
  * @param dateTimeString - Database date string "YYYY-MM-DD HH:mm:ss"
  * @returns datetime-local format "YYYY-MM-DDTHH:mm"
@@ -82,23 +62,26 @@ function getCurrentDateTimeLocal(): string {
  *   - includeTime: Whether to include the time part (default: true).
  *   - includeSeconds: Whether to include seconds in the time part (default: false).
  *   - dateStyle: The style of the date part. Options:
- *       - 'medium': "DD/MM/YYYY" (e.g., "01/06/2024")
+ *       - 'normal': "DD/MM/YYYY" (e.g., "01/06/2024")
  *       - 'long': "DD Month YYYY" (e.g., "01 June 2024")
- *   - pm: Whether to format the time in 12-hour format with am/pm (default: false).
+ *   - pm: Whether to format the time in 12-hour format with am/pm (default: true).
  * @returns Formatted date string according to the specified options.
  *
  * @example
- * formatDateForDisplay("2024-06-01 14:30:00", { dateStyle: 'normal' }); // "01/06/2024 14:30"
- * formatDateForDisplay("2024-06-01 14:30:00", { dateStyle: 'long', includeTime: false }); // "01 June 2024"
- * formatDateForDisplay("2024-06-01 14:30:00", { includeSeconds: true }); // "01/06/2024 14:30:00"
- * formatDateForDisplay("2024-06-01 14:30:00", { dateStyle: 'long', pm: true }); // "01 June 2024 2:30:00 pm"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'normal' }); // "01/06/2024 14:30"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'long', includeTime: false }); // "01 June 2024"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'normal', includeTime: false }); // "01/06/2024"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'db' }); // "01-06-2024 14:30:00"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'db', includeTime: false }); // "01-06-2024"
+ * formatDate("2024-06-01 14:30:00", { includeSeconds: true }); // "01/06/2024 14:30:00"
+ * formatDate("2024-06-01 14:30:00", { dateStyle: 'long', pm: true }); // "01 June 2024 2:30:00 pm"
  */
-function formatDateForDisplay(
+function formatDate(
     dateTimeString: string,
     options: {
         includeTime?: boolean;
         includeSeconds?: boolean;
-        dateStyle?: 'normal' | 'long';
+        dateStyle?: 'normal' | 'long' | 'db';
         pm?: boolean;
     } = {}
 ): string {
@@ -106,33 +89,169 @@ function formatDateForDisplay(
         includeTime = true,
         includeSeconds = false,
         dateStyle = 'normal',
-        pm = true,
+        pm = true, // Fixed: was documented as false but actually defaults to true
     } = options;
 
-    // Accept either "YYYY-MM-DD HH:mm[:ss]" or "YYYY-MM-DD" (date-only).
-    const parts = dateTimeString.split(' ');
-    const datePart = parts[0];
-    const timePart = parts.length >= 2 ? parts.slice(1).join(' ') : undefined;
+    const isIso = dateTimeString.includes('T');
+    const dbRegex = /^\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}(?::\d{2})?)?$/;
 
-    const [year, month, day] = datePart.split('-');
-
-    let formattedDate: string;
-    switch (dateStyle) {
-        case 'normal':
-            formattedDate = `${day}/${month}/${year}`;
-            break;
-        case 'long':
-            formattedDate = `${day} ${months[parseInt(month) - 1].label} ${year}`;
-            break;
-        default:
-            formattedDate = `${day}/${month}/${year}`;
+    // Special handling for DB-style output
+    if (dateStyle === 'db') {
+        return formatAsDbStyle(dateTimeString, isIso, dbRegex, includeTime);
     }
 
-    // If the input is date-only, ignore includeTime and return date only.
+    // Parse date and time parts
+    const { datePart, timePart } = parseDateTimeParts(dateTimeString, isIso, dbRegex);
+
+    // Format date according to style
+    const formattedDate = formatDatePart(datePart, dateStyle);
+
+    // If no time part or time is not requested, return date only
     if (!timePart || !includeTime) {
         return formattedDate;
     }
 
+    // Format time according to options
+    const formattedTime = formatTimePart(timePart, {
+        includeSeconds,
+        pm
+    });
+
+    return `${formattedDate} ${formattedTime}`;
+}
+
+// Helper function to handle DB-style formatting
+function formatAsDbStyle(
+    dateTimeString: string,
+    isIso: boolean,
+    dbRegex: RegExp,
+    includeTime: boolean
+): string {
+    if (isIso) {
+        return handleIsoDbFormat(dateTimeString, includeTime);
+    } else if (dbRegex.test(dateTimeString)) {
+        return handleDbFormat(dateTimeString, includeTime);
+    } else {
+        throw new Error('Invalid date-time format');
+    }
+}
+
+// Helper function to handle ISO format for DB style
+function handleIsoDbFormat(dateTimeString: string, includeTime: boolean): string {
+    const tzOffsetRegex = /([zZ]|[+-]\d{2}:?\d{2})$/;
+    const hasOffset = tzOffsetRegex.test(dateTimeString);
+
+    if (!hasOffset) {
+        // timezone-less -> treat as UTC
+        const iso = dateTimeString.endsWith('Z') ? dateTimeString : `${dateTimeString}Z`;
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) throw new Error('Invalid date-time format');
+        const Y = d.getUTCFullYear();
+        const M = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const D = String(d.getUTCDate()).padStart(2, '0');
+        if (!includeTime) return `${Y}-${M}-${D}`;
+        const hh = String(d.getUTCHours()).padStart(2, '0');
+        const mm = String(d.getUTCMinutes()).padStart(2, '0');
+        const ss = String(d.getUTCSeconds()).padStart(2, '0');
+        return `${Y}-${M}-${D} ${hh}:${mm}:${ss}`;
+    }
+
+    // Has offset -> extract date and time components directly
+    const core = dateTimeString.replace(tzOffsetRegex, '');
+    const [datePartIso, timePartIso = '00:00:00'] = core.split('T');
+    let time = timePartIso.split('.')[0]; // drop fractional seconds
+    if (!time.includes(':')) time = `${time}:00:00`;
+    const [h = '00', m = '00', s = '00'] = time.split(':');
+    const hh = String(h).padStart(2, '0');
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    if (!includeTime) return datePartIso;
+    return `${datePartIso} ${hh}:${mm}:${ss}`;
+}
+
+// Helper function to handle DB format for DB style
+function handleDbFormat(dateTimeString: string, includeTime: boolean): string {
+    const parts = dateTimeString.split(' ');
+    const date = parts[0];
+    if (!includeTime) return date;
+    const time = parts.length >= 2 ? parts[1] : '00:00:00';
+    const [h = '00', m = '00', s = '00'] = time.split(':');
+    const hh = String(h).padStart(2, '0');
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return `${date} ${hh}:${mm}:${ss}`;
+}
+
+// Helper function to parse date and time parts
+function parseDateTimeParts(
+    dateTimeString: string,
+    isIso: boolean,
+    dbRegex: RegExp
+): { datePart: string; timePart: string | undefined } {
+    let datePart: string;
+    let timePart: string | undefined;
+
+    if (isIso) {
+        const tzOffsetRegex = /([zZ]|[+-]\d{2}:?\d{2})$/;
+        const hasOffset = tzOffsetRegex.test(dateTimeString);
+
+        if (!hasOffset) {
+            // timezone-less ISO -> treat as UTC
+            const iso = dateTimeString.endsWith('Z') ? dateTimeString : `${dateTimeString}Z`;
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) throw new Error('Invalid date-time format');
+            const Y = d.getUTCFullYear();
+            const M = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const D = String(d.getUTCDate()).padStart(2, '0');
+            datePart = `${Y}-${M}-${D}`;
+            const hh = String(d.getUTCHours()).padStart(2, '0');
+            const mm = String(d.getUTCMinutes()).padStart(2, '0');
+            const ss = String(d.getUTCSeconds()).padStart(2, '0');
+            timePart = `${hh}:${mm}:${ss}`;
+        } else {
+            // ISO with offset -> preserve the local components
+            const core = dateTimeString.replace(tzOffsetRegex, '');
+            const [dateIso, timeIso = '00:00:00'] = core.split('T');
+            datePart = dateIso;
+            let time = timeIso.split('.')[0];
+            if (!time.includes(':')) time = `${time}:00:00`;
+            const [h = '00', m = '00', s = '00'] = time.split(':');
+            const hh = String(h).padStart(2, '0');
+            const mm = String(m).padStart(2, '0');
+            const ss = String(s).padStart(2, '0');
+            timePart = `${hh}:${mm}:${ss}`;
+        }
+    } else if (dbRegex.test(dateTimeString)) {
+        const parts = dateTimeString.split(' ');
+        datePart = parts[0];
+        timePart = parts.length >= 2 ? parts.slice(1).join(' ') : undefined;
+    } else {
+        throw new Error('Invalid date-time format');
+    }
+
+    return { datePart, timePart };
+}
+
+// Helper function to format date part according to style
+function formatDatePart(datePart: string, dateStyle: 'normal' | 'long' | 'db'): string {
+    const [year, month, day] = datePart.split('-');
+
+    switch (dateStyle) {
+        case 'long':
+            return `${day} ${months[parseInt(month, 10) - 1].label} ${year}`;
+        default: // 'normal' or 'db'
+            return `${day}/${month}/${year}`;
+    }
+}
+
+// Helper function to format time part according to options
+function formatTimePart(
+    timePart: string,
+    options: {
+        includeSeconds: boolean;
+        pm: boolean;
+    }
+): string {
     let hours = 0, minutes = 0, seconds = 0;
     const timeParts = timePart.split(':');
     if (timeParts.length >= 2) {
@@ -141,24 +260,21 @@ function formatDateForDisplay(
         seconds = Number(timeParts[2] || '0');
     }
 
-    let formattedTime: string;
-    if (pm) {
+    if (options.pm) {
         const period = hours >= 12 ? 'pm' : 'am';
         const adjustedHours = hours % 12 || 12;
-        if (includeSeconds) {
-            formattedTime = `${adjustedHours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
+        if (options.includeSeconds) {
+            return `${adjustedHours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} ${period}`;
         } else {
-            formattedTime = `${adjustedHours}:${String(minutes).padStart(2, '0')} ${period}`;
+            return `${adjustedHours}:${String(minutes).padStart(2, '0')} ${period}`;
         }
     } else {
-        if (includeSeconds) {
-            formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (options.includeSeconds) {
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         } else {
-            formattedTime = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
         }
     }
-
-    return `${formattedDate} ${formattedTime}`;
 }
 
 /**
@@ -225,7 +341,7 @@ function getCurrentDate(): string {
     return `${year}-${month}-${day}`;
 }
 
-// Note: formatDateForDisplay now accepts date-only strings ("YYYY-MM-DD") and
+// Note: formatDate now accepts date-only strings ("YYYY-MM-DD") and
 // will return only the date part when a time component is not present. The
 // previous helper `formatDateOnlyForDisplay` was removed to keep the API small.
 
@@ -265,11 +381,10 @@ function formatTimestampToDisplay(timestamp: number): string {
 }
 
 export {
-    formatDateTimeLocal,
     formatToDateTimeLocal,
     getCurrentDateTime,
     getCurrentDateTimeLocal,
-    formatDateForDisplay,
+    formatDate,
     getDatePart,
     getTimePart,
     getTimePartWithoutSeconds,

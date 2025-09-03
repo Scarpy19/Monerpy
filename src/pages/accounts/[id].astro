@@ -2,7 +2,7 @@
 import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import { actions } from "astro:actions";
-import { formatDateForDisplay, formatCurrency } from "@lib/date-utils.ts";
+import { formatDate, formatCurrency } from "@lib/date-utils.ts";
 import { accountTypes } from "@arrays.d.ts";
 import Input from "@comps/Input.astro";
 import AccountTypeSelect from "@comps/accounts/AccountTypeSelect.astro";
@@ -171,7 +171,7 @@ const account = accountResult.data.account;
                                                         {transaction.name}
                                                     </p>
                                                     <p class="text-gray-400 text-sm">
-                                                        {formatDateForDisplay(
+                                                        {formatDate(
                                                             transaction.date,
                                                             {
                                                                 includeTime: false,
@@ -238,7 +238,7 @@ const account = accountResult.data.account;
                                         .map((balance: any) => (
                                             <div class="flex items-center justify-between py-2">
                                                 <p class="text-gray-400">
-                                                    {formatDateForDisplay(
+                                                    {formatDate(
                                                         balance.date,
                                                         {
                                                             includeTime: false,

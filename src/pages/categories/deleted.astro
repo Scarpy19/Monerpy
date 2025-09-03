@@ -3,7 +3,7 @@ import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
-import { formatDateForDisplay } from "@lib/date-utils.ts";
+import { formatDate } from "@lib/date-utils.ts";
 import Bin from "@comps/svgs/mono/Bin.astro";
 import Folder from "@comps/svgs/mono/Folder.astro";
 import DeletedInfo from "@comps/DeletedInfo.astro";
@@ -157,7 +157,7 @@ const deletedMsgs: string[] = [
                                             )}
                                             <p class="text-xs text-gray-500 mt-1">
                                                 Deleted on:
-                                                {formatDateForDisplay(
+                                                {formatDate(
                                                     category.deletedAt,
                                                     {
                                                         includeTime: true,

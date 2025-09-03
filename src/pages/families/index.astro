@@ -3,7 +3,7 @@ import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
-import { formatDateForDisplay, formatCurrency } from "@lib/date-utils.ts";
+import { formatDate, formatCurrency } from "@lib/date-utils.ts";
 import Users from "@comps/svgs/mono/Users.astro";
 
 const user = Astro.locals.user;
@@ -199,7 +199,7 @@ const userRole = familyDetailsResult.data?.ok
                       <p class="text-sm text-gray-300">{member.email}</p>
                       <p class="text-xs text-gray-400">
                         Joined
-                        {formatDateForDisplay(member.createdAt, {
+                        {formatDate(member.createdAt, {
                           includeTime: false,
                         })}
                       </p>

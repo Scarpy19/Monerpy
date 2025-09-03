@@ -1,7 +1,7 @@
 import { defineAction } from "astro:actions";
 import { z } from 'astro:schema';
 import { prisma } from '@prisma/index.js';
-import { formatDateTimeLocal, getCurrentDateTime } from '@lib/date-utils.ts';
+import { formatDate, getCurrentDateTime } from '@lib/date-utils.ts';
 
 const updateRecurringTransaction = defineAction({
     accept: 'form',
@@ -11,7 +11,7 @@ const updateRecurringTransaction = defineAction({
         categoryId: z.string().nullable().transform(val => val && val !== '' ? parseInt(val) : undefined),
         description: z.string().trim().min(1, "Description is required"),
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
-        type: z.enum(['Income', 'Expense', 'InvestmentBuy', 'InvestmentSell', 'LoanPayment', 'LoanRepayment']),
+        type: z.enum(['Income', 'Expense']),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']),
         dayOfMonth: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfWeek: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
@@ -92,7 +92,7 @@ const updateRecurringTransaction = defineAction({
                 if (!input.endDate) {
                     return { ok: false, error: "End date is required when end condition is set to end by date" };
                 }
-                endDate = formatDateTimeLocal(input.endDate);
+                endDate = formatDate(input.endDate, { dateStyle: 'db', includeTime: false });
             } else if (input.endCondition === 'maxOccurrences') {
                 if (!input.maxOccurrences || input.maxOccurrences <= 0) {
                     return { ok: false, error: "Max occurrences must be a positive number" };
@@ -141,7 +141,7 @@ const updateRecurringTransaction = defineAction({
                     dayOfMonth: input.dayOfMonth,
                     dayOfWeek: input.dayOfWeek,
                     timeOfDay: input.timeOfDay,
-                    startDate: formatDateTimeLocal(input.startDate),
+                    startDate: formatDate(input.startDate, { dateStyle: 'db', includeTime: false }),
                     endDate,
                     maxOccurrences,
                     updatedAt: getCurrentDateTime()

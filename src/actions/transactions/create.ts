@@ -1,7 +1,7 @@
 import { defineAction } from "astro:actions";
 import { z } from 'astro:schema';
 import { prisma } from '@prisma/index.js';
-import { formatDateTimeLocal, getCurrentDateTime } from '@lib/date-utils.ts';
+import { formatDate, getCurrentDateTime } from '@lib/date-utils.ts';
 
 const createTransaction = defineAction({
     accept: 'form',
@@ -13,8 +13,6 @@ const createTransaction = defineAction({
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number."),
         type: z.enum(['Income', 'Expense']),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
-        newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
-        newCategoryColor: z.string().optional().default("#6172f3")
     }),
     handler: async (input, context) => {
         try {
@@ -47,41 +45,13 @@ const createTransaction = defineAction({
                 return { ok: false, error: "Account not found or not accessible." };
             }
 
-            let categoryId = input.categoryId;
-
-            // Handle new category creation
-            if (input.newCategory && !input.categoryId) {
-                const existingCategory = await prisma.category.findFirst({
-                    where: {
-                        name: input.newCategory,
-                        familyId: userWithFamily.familyId,
-                        deletedAt: null
-                    }
-                });
-
-                if (existingCategory) {
-                    categoryId = existingCategory.id;
-                } else {
-                    const newCategory = await prisma.category.create({
-                        data: {
-                            name: input.newCategory,
-                            color: input.newCategoryColor,
-                            familyId: userWithFamily.familyId,
-                            createdAt: getCurrentDateTime(),
-                            updatedAt: getCurrentDateTime()
-                        }
-                    });
-                    categoryId = newCategory.id;
-                }
-            }
-
             // Create transaction
             const transaction = await prisma.transaction.create({
                 data: {
                     accountId: input.accountId,
                     userId: user.id,
-                    categoryId,
-                    date: formatDateTimeLocal(input.date),
+                    categoryId: input.categoryId,
+                    date: formatDate(input.date, { dateStyle: 'db' }),
                     name: input.name,
                     amount: input.amount,
                     type: input.type,

@@ -1,7 +1,7 @@
 import { defineAction } from "astro:actions";
 import { z } from 'astro:schema';
 import { prisma } from '@prisma/index.js';
-import { formatDateTimeLocal, getCurrentDateTime } from '@lib/date-utils.ts';
+import { formatDate, getCurrentDateTime } from '@lib/date-utils.ts';
 
 const createRecurringTransaction = defineAction({
     accept: 'form',
@@ -10,7 +10,7 @@ const createRecurringTransaction = defineAction({
         categoryId: z.string().nullable().transform(val => val && val !== '' ? parseInt(val) : undefined),
         description: z.string().trim().min(1, "Description is required"),
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
-        type: z.enum(['Income', 'Expense', 'InvestmentBuy', 'InvestmentSell', 'LoanPayment', 'LoanRepayment']),
+        type: z.enum(['Income', 'Expense']),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']),
         dayOfMonth: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfWeek: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
@@ -20,12 +20,11 @@ const createRecurringTransaction = defineAction({
         endDate: z.string().nullable().optional(),
         maxOccurrences: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
-        newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
-        newCategoryColor: z.string().optional().default("#6172f3")
     }),
     handler: async (input, context) => {
         try {
             const user = context.locals.user;
+            console.log(input);
 
             if (!user) {
                 return { ok: false, error: "Authentication required" };
@@ -75,7 +74,10 @@ const createRecurringTransaction = defineAction({
                 if (!input.endDate) {
                     return { ok: false, error: "End date is required when end condition is set to end by date" };
                 }
-                endDate = formatDateTimeLocal(input.endDate);
+                endDate = formatDate(input.endDate, {
+                    dateStyle: 'db',
+                    includeTime: false,
+                });
             } else if (input.endCondition === 'maxOccurrences') {
                 if (!input.maxOccurrences || input.maxOccurrences <= 0) {
                     return { ok: false, error: "Max occurrences must be a positive number" };
@@ -83,40 +85,12 @@ const createRecurringTransaction = defineAction({
                 maxOccurrences = input.maxOccurrences;
             }
 
-            let categoryId = input.categoryId;
-
-            // Handle new category creation
-            if (input.newCategory && !input.categoryId) {
-                const existingCategory = await prisma.category.findFirst({
-                    where: {
-                        name: input.newCategory,
-                        familyId: userWithFamily.familyId,
-                        deletedAt: null
-                    }
-                });
-
-                if (existingCategory) {
-                    categoryId = existingCategory.id;
-                } else {
-                    const newCategory = await prisma.category.create({
-                        data: {
-                            name: input.newCategory,
-                            color: input.newCategoryColor,
-                            familyId: userWithFamily.familyId,
-                            createdAt: getCurrentDateTime(),
-                            updatedAt: getCurrentDateTime()
-                        }
-                    });
-                    categoryId = newCategory.id;
-                }
-            }
-
             // Create recurring transaction
             const recurringTransaction = await prisma.recurringTransaction.create({
                 data: {
                     accountId: input.accountId,
                     userId: user.id,
-                    categoryId,
+                    categoryId: input.categoryId,
                     description: input.description,
                     amount: input.amount,
                     type: input.type,
@@ -124,7 +98,10 @@ const createRecurringTransaction = defineAction({
                     dayOfMonth: input.dayOfMonth,
                     dayOfWeek: input.dayOfWeek,
                     timeOfDay: input.timeOfDay,
-                    startDate: formatDateTimeLocal(input.startDate),
+                    startDate: formatDate(input.startDate, {
+                        dateStyle: 'db',
+                        includeTime: false,
+                    }),
                     endDate,
                     maxOccurrences,
                     createdAt: getCurrentDateTime(),

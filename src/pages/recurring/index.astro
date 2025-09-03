@@ -5,7 +5,7 @@ import RecurringTransactionModal from "@comps/recurring/RecurringTransactionModa
 import DeleteConfirmModal from "@comps/DeleteConfirmModal.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
-import { formatDateForDisplay, formatCurrency } from "@lib/date-utils.ts";
+import { formatDate, formatCurrency } from "@lib/date-utils.ts";
 import JoinFamily from "@comps/layout/JoinFamily.astro";
 import CreateAccount from "@comps/layout/CreateAccount.astro";
 import TransactionIcon from "@comps/svgs/mono/TransactionIcon.astro";
@@ -282,7 +282,7 @@ function getStatusText(status: string): string {
                                                         <span class="text-gray-400">
                                                             Started:
                                                         </span>
-                                                        {formatDateForDisplay(
+                                                        {formatDate(
                                                             recurringTransaction.startDate,
                                                             {
                                                                 includeTime: false,
@@ -294,7 +294,7 @@ function getStatusText(status: string): string {
                                                             <span class="text-gray-400">
                                                                 Ends:
                                                             </span>
-                                                            {formatDateForDisplay(
+                                                            {formatDate(
                                                                 recurringTransaction.endDate,
                                                                 {
                                                                     includeTime: false,
@@ -342,7 +342,7 @@ function getStatusText(status: string): string {
                                                             Next:
                                                         </div>
                                                         <div class="text-sm text-yellow-400 font-medium">
-                                                            {formatDateForDisplay(
+                                                            {formatDate(
                                                                 recurringTransaction.nextExecution
                                                                     .toISOString()
                                                                     .replace(
@@ -446,7 +446,7 @@ function getStatusText(status: string): string {
                                                             .slice(0, 3)
                                                             .map((log) => (
                                                                 <div class="text-xs bg-gray-600 px-2 py-1 rounded">
-                                                                    {formatDateForDisplay(
+                                                                    {formatDate(
                                                                         log.executionTime,
                                                                         {
                                                                             includeTime: false,

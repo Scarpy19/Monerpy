@@ -1,7 +1,7 @@
 import { defineAction } from "astro:actions";
 import { z } from 'astro:schema';
 import { prisma } from '@prisma/index.js';
-import { getCurrentDateTime, formatDateTimeLocal } from '@lib/date-utils.ts';
+import { getCurrentDateTime, formatDate } from '@lib/date-utils.ts';
 import type { Tag } from '@types.d.ts';
 
 // Generate transactions from recurring rules
@@ -97,7 +97,7 @@ const generateRecurringTransactions = defineAction({
                         const existingLog = await prisma.recurringTransactionLog.findFirst({
                             where: {
                                 recurringTransactionId: recurringTransaction.id,
-                                executionTime: formatDateTimeLocal(currentDate.toISOString())
+                                executionTime: formatDate(currentDate.toISOString(), { dateStyle: 'db' })
                             }
                         });
 
@@ -108,7 +108,7 @@ const generateRecurringTransactions = defineAction({
                                     accountId: recurringTransaction.accountId,
                                     userId: recurringTransaction.userId,
                                     categoryId: recurringTransaction.categoryId,
-                                    date: formatDateTimeLocal(currentDate.toISOString()),
+                                    date: formatDate(currentDate.toISOString(), { dateStyle: 'db' }),
                                     name: `${recurringTransaction.description} (Recurring)`,
                                     amount: recurringTransaction.amount,
                                     type: recurringTransaction.type,
@@ -147,7 +147,7 @@ const generateRecurringTransactions = defineAction({
                                 data: {
                                     recurringTransactionId: recurringTransaction.id,
                                     generatedTransactionId: transaction.id,
-                                    executionTime: formatDateTimeLocal(currentDate.toISOString()),
+                                    executionTime: formatDate(currentDate.toISOString(), { dateStyle: 'db' }),
                                     createdAt: getCurrentDateTime(),
                                     updatedAt: getCurrentDateTime()
                                 }

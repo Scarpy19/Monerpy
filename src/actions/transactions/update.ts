@@ -1,7 +1,7 @@
 import { defineAction } from "astro:actions";
 import { z } from 'astro:schema';
 import { prisma } from '@prisma/index.js';
-import { formatDateTimeLocal, getCurrentDateTime } from '@lib/date-utils.ts';
+import { formatDate, getCurrentDateTime } from '@lib/date-utils.ts';
 
 const updateTransaction = defineAction({
     accept: 'form',
@@ -12,7 +12,7 @@ const updateTransaction = defineAction({
         date: z.string().min(1, "Date is required"),
         name: z.string().trim().min(1, "Transaction name is required"),
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
-        type: z.enum(['Income', 'Expense', 'InvestmentBuy', 'InvestmentSell', 'LoanPayment', 'LoanRepayment']),
+        type: z.enum(['Income', 'Expense']),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
         newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
         newCategoryColor: z.string().optional().default("#6172f3")
@@ -97,7 +97,7 @@ const updateTransaction = defineAction({
                 data: {
                     accountId: input.accountId,
                     categoryId,
-                    date: formatDateTimeLocal(input.date),
+                    date: formatDate(input.date, { dateStyle: 'db' }),
                     name: input.name,
                     amount: input.amount,
                     type: input.type,

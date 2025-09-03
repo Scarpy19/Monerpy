@@ -4,7 +4,7 @@ import Header from "@comps/layout/Header.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
 import {
-    formatDateForDisplay,
+    formatDate,
     formatTimestampToDisplay,
 } from "@/lib/date-utils";
 
@@ -107,7 +107,7 @@ const userInfo = userInfoResult.data?.ok && userInfoResult.data.user;
                             <p class="text-white font-medium">
                                 {
                                     userInfo && userInfo.createdAt
-                                        ? formatDateForDisplay(
+                                        ? formatDate(
                                               userInfo.createdAt,
                                               {
                                                   includeTime: true,
@@ -123,7 +123,7 @@ const userInfo = userInfoResult.data?.ok && userInfoResult.data.user;
                             <p class="text-white font-medium">
                                 {
                                     userInfo && userInfo.lastLogin
-                                        ? formatDateForDisplay(
+                                        ? formatDate(
                                               userInfo.lastLogin,
                                               {
                                                   includeTime: true,
@@ -139,7 +139,7 @@ const userInfo = userInfoResult.data?.ok && userInfoResult.data.user;
                             <p class="text-white font-medium">
                                 {
                                     userInfo && userInfo.updatedAt
-                                        ? formatDateForDisplay(
+                                        ? formatDate(
                                               userInfo.updatedAt,
                                               {
                                                   includeTime: true,
