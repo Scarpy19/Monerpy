@@ -184,8 +184,8 @@ model RecurringTransaction {
   dayOfMonth       Int? // monthly and yearly frequency
   dayOfWeek        Int? // 0 (sunday) a 6 (saturday) weekly frequency
   timeOfDay        String? // HH:mm:ss
-  startDate        String // YYYY-MM-DD HH:mm:ss
-  endDate          String? // YYYY-MM-DD HH:mm:ss
+  startDate        String // YYYY-MM-DD
+  endDate          String? // YYYY-MM-DD
   maxOccurrences   Int?
   occurrencesCount Int             @default(0)
   createdAt        String // YYYY-MM-DD HH:mm:ss
