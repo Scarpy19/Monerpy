@@ -15,13 +15,7 @@ declare global {
 // Enums from Prisma schema represented as string literal unions
 type UserRole = "Admin" | "Member";
 type AccountType = "Cash" | "Checking" | "Savings" | "CreditCard" | "Investment" | "Loan";
-type TransactionType =
-    | "Income"
-    | "Expense"
-    | "InvestmentBuy"
-    | "InvestmentSell"
-    | "LoanPayment"
-    | "LoanRepayment";
+type TransactionType = "Income" | "Expense";
 type Frequency = "Daily" | "Weekly" | "Monthly" | "Yearly";
 
 // Basic utility types for session/toast

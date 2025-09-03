@@ -9,7 +9,7 @@ const getRecurringTransactions = defineAction({
         limit: z.number().default(20),
         accountId: z.number().optional(),
         categoryId: z.number().optional(),
-        type: z.enum(['Income', 'Expense', 'InvestmentBuy', 'InvestmentSell', 'LoanPayment', 'LoanRepayment']).optional(),
+        type: z.enum(['Income', 'Expense']).optional(),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']).optional(),
         status: z.enum(['active', 'completed', 'paused']).optional()
     }),
