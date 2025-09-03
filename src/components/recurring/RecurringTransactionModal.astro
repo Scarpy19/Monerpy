@@ -162,10 +162,7 @@ const modalId = Astro.props.id ?? null;
                                 >
                                 {
                                     frequency.map((freq) => (
-                                        <option value={freq}>
-                                            {freq.charAt(0).toUpperCase() +
-                                                freq.slice(1)}
-                                        </option>
+                                        <option value={freq}>{freq}</option>
                                     ))
                                 }
                             </select>
@@ -435,13 +432,13 @@ const modalId = Astro.props.id ?? null;
                             if (timeOfDayContainer)
                                 timeOfDayContainer.classList.remove("hidden");
                         }
-                        if (frequency === "weekly") {
+                        if (frequency === "Weekly") {
                             if (dayOfWeekContainer)
                                 dayOfWeekContainer.classList.remove("hidden");
-                        } else if (frequency === "monthly") {
+                        } else if (frequency === "Monthly") {
                             if (dayOfMonthContainer)
                                 dayOfMonthContainer.classList.remove("hidden");
-                        } else if (frequency === "yearly") {
+                        } else if (frequency === "Yearly") {
                             if (dayOfMonthContainer)
                                 dayOfMonthContainer.classList.remove("hidden");
                             if (monthContainer)

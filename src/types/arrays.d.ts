@@ -63,10 +63,10 @@ const colors = [
 ];
 
 const frequency = [
-    "daily",
-    "weekly",
-    "monthly",
-    "yearly",
+    "Daily",
+    "Weekly",
+    "Monthly",
+    "Yearly",
 ]
 
 const TOAST_TYPES = {
