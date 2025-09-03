@@ -401,12 +401,19 @@ const deletedInfoItems = [
                                     );
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk restore failed",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk restore failed",
+                                });
                             }
                         } catch (err) {
                             console.error(err);
+                            ToastService.showToast({
+                                type: "error",
+                                message: "An unexpected error occurred: " + err,
+                            });
                         }
                     },
                 });
@@ -457,12 +464,19 @@ const deletedInfoItems = [
                                     );
                                 window.location.reload();
                             } else {
-                                ToastService.error(
-                                    result.data?.error || "Bulk purge failed",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        result.data?.error ||
+                                        "Bulk purge failed",
+                                });
                             }
                         } catch (err) {
                             console.error(err);
+                            ToastService.showToast({
+                                type: "error",
+                                message: "An unexpected error occurred: " + err,
+                            });
                         }
                     },
                 });
@@ -524,19 +538,23 @@ const deletedInfoItems = [
                                     // Reload the page to show updated data
                                     window.location.reload();
                                 } else {
-                                    ToastService.error(
-                                        result.data?.error ||
+                                    ToastService.showToast({
+                                        type: "error",
+                                        message:
+                                            result.data?.error ||
                                             "Failed to restore tag",
-                                    );
+                                    });
                                     console.error(
                                         "Tag restore failed:",
                                         result.error || result.data?.error,
                                     );
                                 }
                             } catch (error) {
-                                ToastService.error(
-                                    "An error occurred. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "An error occurred. Please try again.",
+                                });
                                 console.error("Error restoring tag:", error);
                             }
                         },
@@ -598,19 +616,23 @@ const deletedInfoItems = [
                                     // Reload the page to show updated data
                                     window.location.reload();
                                 } else {
-                                    ToastService.error(
-                                        result.data?.error ||
+                                    ToastService.showToast({
+                                        type: "error",
+                                        message:
+                                            result.data?.error ||
                                             "Failed to permanently delete tag",
-                                    );
+                                    });
                                     console.error(
                                         "Tag purge failed:",
                                         result.error || result.data?.error,
                                     );
                                 }
                             } catch (error) {
-                                ToastService.error(
-                                    "An error occurred. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "An error occurred. Please try again.",
+                                });
                                 console.error("Error purging tag:", error);
                             }
                         },

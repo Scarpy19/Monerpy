@@ -379,13 +379,19 @@ const userRole = familyDetailsResult.data?.ok
           window.location.reload();
         } else {
           console.error("Error joining family:", data?.error);
-          ToastService.error(data?.error || "Failed to join family");
+          ToastService.showToast({
+            type: "error",
+            message: data?.error || "Failed to join family",
+          });
         }
       } catch (error) {
         console.error("Error joining family:", error);
         const errorMessage =
           error instanceof Error ? error.message : "Failed to join family";
-        ToastService.error(errorMessage);
+        ToastService.showToast({
+          type: "error",
+          message: errorMessage,
+        });
       }
     });
 
@@ -443,7 +449,10 @@ const userRole = familyDetailsResult.data?.ok
                 window.location.reload();
               } else {
                 console.error("Error leaving family:", data?.error);
-                ToastService.error(data?.error || "Failed to leave family");
+                ToastService.showToast({
+                  type: "error",
+                  message: data?.error || "Failed to leave family",
+                });
               }
             } catch (error) {
               console.error("Error leaving family:", error);
@@ -451,7 +460,10 @@ const userRole = familyDetailsResult.data?.ok
                 error instanceof Error
                   ? error.message
                   : "Failed to leave family";
-              ToastService.error(errorMessage);
+              ToastService.showToast({
+                type: "error",
+                message: errorMessage,
+              });
             }
           },
           onSecondary: async () => {
@@ -471,7 +483,10 @@ const userRole = familyDetailsResult.data?.ok
                 window.location.reload();
               } else {
                 console.error("Error deleting family:", data?.error);
-                ToastService.error(data?.error || "Failed to delete family");
+                ToastService.showToast({
+                  type: "error",
+                  message: data?.error || "Failed to delete family",
+                });
               }
             } catch (error) {
               console.error("Error deleting family:", error);
@@ -479,7 +494,10 @@ const userRole = familyDetailsResult.data?.ok
                 error instanceof Error
                   ? error.message
                   : "Failed to delete family";
-              ToastService.error(errorMessage);
+              ToastService.showToast({
+                type: "error",
+                message: errorMessage,
+              });
             }
           },
         });
@@ -507,7 +525,10 @@ const userRole = familyDetailsResult.data?.ok
                 window.location.reload();
               } else {
                 console.error("Error leaving family:", data?.error);
-                ToastService.error(data?.error || "Failed to leave family");
+                ToastService.showToast({
+                  type: "error",
+                  message: data?.error || "Failed to leave family",
+                });
               }
             } catch (error) {
               console.error("Error leaving family:", error);
@@ -549,7 +570,10 @@ const userRole = familyDetailsResult.data?.ok
             window.location.reload();
           } else {
             console.error("Error updating user role:", data?.error);
-            ToastService.error(data?.error || "Failed to update user role");
+            ToastService.showToast({
+              type: "error",
+              message: data?.error || "Failed to update user role",
+            });
           }
         } catch (error) {
           console.error("Error updating user role:", error);
@@ -557,7 +581,10 @@ const userRole = familyDetailsResult.data?.ok
             error instanceof Error
               ? error.message
               : "Failed to update user role";
-          ToastService.error(errorMessage);
+          ToastService.showToast({
+            type: "error",
+            message: errorMessage,
+          });
         }
       });
     });
@@ -606,7 +633,10 @@ const userRole = familyDetailsResult.data?.ok
                 error instanceof Error
                   ? error.message
                   : "Failed to remove user from family";
-              ToastService.error(errorMessage);
+              ToastService.showToast({
+                type: "error",
+                message: errorMessage,
+              });
             }
           },
         });

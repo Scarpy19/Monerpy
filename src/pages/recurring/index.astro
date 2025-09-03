@@ -592,18 +592,22 @@ function getStatusText(status: string): string {
                                     "Recurring transaction deletion failed:",
                                     result.error || result.data?.error,
                                 );
-                                ToastService.error(
-                                    "Failed to delete recurring transaction. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "Failed to delete recurring transaction. Please try again.",
+                                });
                             }
                         } catch (error) {
                             console.error(
                                 "Error deleting recurring transaction:",
                                 error,
                             );
-                            ToastService.error(
-                                "Failed to delete recurring transaction. Please try again.",
-                            );
+                            ToastService.showToast({
+                                type: "error",
+                                message:
+                                    "Failed to delete recurring transaction. Please try again.",
+                            });
                         }
                     },
                 );
@@ -654,18 +658,22 @@ function getStatusText(status: string): string {
                                     "Recurring transaction generation failed:",
                                     result.error || result.data?.error,
                                 );
-                                ToastService.error(
-                                    "Failed to generate transactions. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "Failed to generate transactions. Please try again.",
+                                });
                             }
                         } catch (error) {
                             console.error(
                                 "Error generating recurring transactions:",
                                 error,
                             );
-                            ToastService.error(
-                                "Failed to generate transactions. Please try again.",
-                            );
+                            ToastService.showToast({
+                                type: "error",
+                                message:
+                                    "Failed to generate transactions. Please try again.",
+                            });
                         }
                     },
                 });
@@ -736,18 +744,22 @@ function getStatusText(status: string): string {
                                     "Recurring transaction generation failed:",
                                     result.error || result.data?.error,
                                 );
-                                ToastService.error(
-                                    "Failed to generate transactions. Please try again.",
-                                );
+                                ToastService.showToast({
+                                    type: "error",
+                                    message:
+                                        "Failed to generate transactions. Please try again.",
+                                });
                             }
                         } catch (error) {
                             console.error(
                                 "Error generating recurring transactions:",
                                 error,
                             );
-                            ToastService.error(
-                                "Failed to generate transactions. Please try again.",
-                            );
+                            ToastService.showToast({
+                                type: "error",
+                                message:
+                                    "Failed to generate transactions. Please try again.",
+                            });
                         }
                     },
                 });

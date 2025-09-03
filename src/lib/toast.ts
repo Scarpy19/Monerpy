@@ -66,9 +66,9 @@ export class ToastService {
         this.addToast({ message, type: 'success', duration });
     }
 
-    static error(message: string, duration?: number) {
+    /* static error(message: string, duration?: number) {
         this.addToast({ message, type: 'error', duration });
-    }
+    } */
 
     static warning(message: string, duration?: number) {
         this.addToast({ message, type: 'warning', duration });
