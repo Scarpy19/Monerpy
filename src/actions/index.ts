@@ -21,7 +21,7 @@ import {
     updateRecurringTransaction,
     deleteRecurringTransaction,
     generateRecurringTransactions
-} from "./recurring-transactions/index.ts";
+} from "./recurring/index.ts";
 import {
     createFamily,
     joinFamily,
