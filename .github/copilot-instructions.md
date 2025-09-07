@@ -25,6 +25,11 @@ Key entities and relationships:
 
 ## Development Workflows
 
+### Error check commands
+```bash
+pnpm astro check
+```
+
 ### Setup
 ```bash
 pnpm install
