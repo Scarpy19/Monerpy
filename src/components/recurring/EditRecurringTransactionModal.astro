@@ -1,0 +1,851 @@
+---
+import X from "@svg/mono/X.astro";
+import Input from "@comps/Input.astro";
+import { daysOfWeek, months, frequency } from "@arrays.d.ts";
+import TypePicker from "@comps/TypePicker.astro";
+import Amount from "@comps/transaction/Amount.astro";
+import Account from "@comps/transaction/Account.astro";
+import Category from "@comps/transaction/Category.astro";
+import TagsDropdownSelect from "@comps/tags/TagsDropdownSelect.astro";
+
+interface Props {
+    id: string;
+}
+
+const { id } = Astro.props as Props;
+---
+
+<edit-recurring-transaction-modal id={id}>
+    <div
+        class="modal-root fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
+    >
+        <div
+            class="bg-gray-800 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4"
+        >
+            <header
+                class="flex items-end justify-between py-4.5 px-6 border-b border-gray-700"
+            >
+                <h2
+                    class="font-semibold text-purple-400 text-xl"
+                    id="modalTitle"
+                >
+                    Edit Recurring Transaction
+                </h2>
+                <button
+                    type="button"
+                    id="recurringEditCloseModalButton"
+                    class="text-gray-400 hover:text-white"
+                >
+                    <X class="w-6 h-6" />
+                </button>
+            </header>
+
+            <form
+                id="recurringEditForm"
+                class="p-6 flex flex-col gap-y-6"
+                novalidate
+            >
+                <input type="hidden" id="recurringEditId" name="id" />
+
+                <!-- Account + Description + script select -->
+                <div class="flex items-center gap-x-4 justify-center">
+                    <Account id="recurringEditAccountId" classes="flex-1" />
+
+                    <Input
+                        id="recurringEditDescription"
+                        label="Description"
+                        name="description"
+                        required={true}
+                        placeholder="Enter description"
+                        classes="flex-1/3"
+                    />
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[346px]">
+                    <!-- Left Column: Type + Amount, Category, Start Date, End Condition radios -->
+                    <div class="flex flex-col gap-y-4">
+                        <div class="flex items-center gap-x-4 justify-center">
+                            <TypePicker id="recurringEdit" />
+                            <Amount id="recurringEdit" classes="flex-1" />
+                        </div>
+
+                        <Category id="recurringEdit" />
+
+                        <!-- Start Date -->
+                        <label for="recurringEditStartDate">
+                            <p class="text-sm font-medium text-gray-300 mb-2">
+                                Start Date *
+                            </p>
+                            <input
+                                id="recurringEditStartDate"
+                                name="startDate"
+                                type="date"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                        </label>
+
+                        <!-- End Condition Radios -->
+                        <div>
+                            <p
+                                class="text-sm font-medium text-gray-300 mb-2 cursor-default"
+                            >
+                                End Condition *
+                            </p>
+                            <div
+                                class="flex items-center justify-between flex-wrap"
+                            >
+                                <label
+                                    for="recurringEditEndConditionNever"
+                                    class="flex items-center gap-x-2"
+                                >
+                                    <input
+                                        id="recurringEditEndConditionNever"
+                                        type="radio"
+                                        name="endCondition"
+                                        value="never"
+                                        class="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span class="text-white">Never ends</span>
+                                </label>
+                                <label
+                                    for="recurringEditEndConditionEndDate"
+                                    class="flex items-center gap-x-2"
+                                >
+                                    <input
+                                        id="recurringEditEndConditionEndDate"
+                                        type="radio"
+                                        name="endCondition"
+                                        value="endDate"
+                                        class="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span class="text-white">End by date</span>
+                                </label>
+                                <label
+                                    for="recurringEditEndConditionMaxOccurrences"
+                                    class="flex items-center gap-x-2"
+                                >
+                                    <input
+                                        id="recurringEditEndConditionMaxOccurrences"
+                                        type="radio"
+                                        name="endCondition"
+                                        value="maxOccurrences"
+                                        class="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span class="text-white"
+                                        >End after X occurrences</span
+                                    >
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Frequency, then frequency options, then End Date / Max Occurrences inputs -->
+                    <div class="flex flex-col gap-y-4">
+                        <!-- Frequency -->
+                        <label for="recurringEditFrequency">
+                            <p class="text-sm font-medium text-gray-300 mb-2">
+                                Frequency *
+                            </p>
+                            <select
+                                id="recurringEditFrequency"
+                                name="frequency"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                                {
+                                    frequency.map((f) => (
+                                        <option value={f}>{f}</option>
+                                    ))
+                                }
+                            </select>
+                        </label>
+
+                        <div
+                            class="flex items-baseline gap-x-4 justify-center *:grow"
+                        >
+                            <!-- Day of Month (for Monthly/Yearly) -->
+                            <label
+                                for="recurringEditDayOfMonth"
+                                id="recurringEditDayOfMonthContainer"
+                                class="hidden"
+                            >
+                                <p
+                                    class="text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Day of Month *
+                                </p>
+                                <input
+                                    id="recurringEditDayOfMonth"
+                                    name="dayOfMonth"
+                                    type="number"
+                                    min="1"
+                                    max="31"
+                                    placeholder="1-31"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                                <p
+                                    class="text-xs text-gray-400 mt-1 w-[125.86%]"
+                                >
+                                    For months with fewer days, the last day of
+                                    the month will be used.
+                                </p>
+                            </label>
+
+                            <!-- Day of Week (for Weekly) -->
+                            <label
+                                for="recurringEditDayOfWeek"
+                                id="recurringEditDayOfWeekContainer"
+                                class="hidden"
+                            >
+                                <p
+                                    class="text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Day of Week *
+                                </p>
+                                <select
+                                    id="recurringEditDayOfWeek"
+                                    name="dayOfWeek"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    {
+                                        daysOfWeek.map((day) => (
+                                            <option value={day.value}>
+                                                {day.label}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
+                            </label>
+
+                            <!-- Time of Day -->
+                            <label
+                                for="recurringEditTimeOfDay"
+                                id="recurringEditTimeOfDayContainer"
+                                class="hidden grow-0"
+                            >
+                                <p
+                                    class="text-sm font-medium text-gray-300 mb-2"
+                                >
+                                    Time of Day *
+                                </p>
+                                <input
+                                    id="recurringEditTimeOfDay"
+                                    name="timeOfDay"
+                                    type="time"
+                                    class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </label>
+                        </div>
+
+                        <!-- Month (for Yearly) -->
+                        <label
+                            for="recurringEditMonth"
+                            id="recurringEditMonthContainer"
+                            class="hidden"
+                        >
+                            <p class="text-sm font-medium text-gray-300 mb-2">
+                                Month *
+                            </p>
+                            <select
+                                id="recurringEditMonth"
+                                name="month"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            >
+                                {
+                                    months.map((month) => (
+                                        <option value={month.value}>
+                                            {month.label}
+                                        </option>
+                                    ))
+                                }
+                            </select>
+                        </label>
+
+                        <!-- End Date (when endCondition is endDate) -->
+                        <label
+                            for="recurringEditEndDate"
+                            id="recurringEditEndDateContainer"
+                            class="hidden"
+                        >
+                            <p class="text-sm font-medium text-gray-300 mb-2">
+                                End Date *
+                            </p>
+                            <input
+                                id="recurringEditEndDate"
+                                name="endDate"
+                                type="date"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                        </label>
+
+                        <!-- Max Occurrences (when endCondition is maxOccurrences) -->
+                        <label
+                            for="recurringEditMaxOccurrences"
+                            id="recurringEditMaxOccurrencesContainer"
+                            class="hidden"
+                        >
+                            <p class="text-sm font-medium text-gray-300 mb-2">
+                                Maximum Occurrences *
+                            </p>
+                            <input
+                                id="recurringEditMaxOccurrences"
+                                name="maxOccurrences"
+                                type="number"
+                                min="1"
+                                placeholder="Number of times to repeat"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            />
+                        </label>
+                    </div>
+                </div>
+
+                <TagsDropdownSelect
+                    id="recurringTags"
+                    name="tags"
+                    label="Tags"
+                />
+                <input type="hidden" id="recurringTagsHidden" name="tags" />
+
+                <!-- Hidden accountId copy for submission when select is disabled -->
+                <input
+                    type="hidden"
+                    id="recurringAccountIdHidden"
+                    name="accountId"
+                />
+
+                <div class="flex gap-3 pt-4">
+                    <div class="flex-3 text-right">
+                        <button
+                            type="button"
+                            id="recurringEditCancelBtn"
+                            class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-white transition duration-200"
+                            >Cancel</button
+                        >
+                    </div>
+                    <button
+                        type="submit"
+                        id="recurringEditSubmitBtn"
+                        class="flex-2 bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-white transition duration-200 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                        <span id="recurringEditSubmitBtnText">Save Changes</span
+                        >
+                        <span
+                            id="recurringEditSubmitSpinner"
+                            class="hidden w-4 h-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin"
+                        ></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class EditRecurringTransactionModal extends HTMLElement {
+            connectedCallback() {
+                const root = this;
+
+                const modal = root.querySelector(
+                    ".modal-root",
+                ) as HTMLDivElement | null;
+                const closeModalButton = root.querySelector(
+                    "#recurringEditCloseModalButton",
+                ) as HTMLButtonElement | null;
+                const cancelBtn = root.querySelector(
+                    "#recurringEditCancelBtn",
+                ) as HTMLButtonElement | null;
+                const form = root.querySelector(
+                    "#recurringEditForm",
+                ) as HTMLFormElement | null;
+                const submitBtn = root.querySelector(
+                    "#recurringEditSubmitBtn",
+                ) as HTMLButtonElement | null;
+                const submitSpinner = root.querySelector(
+                    "#recurringEditSubmitSpinner",
+                ) as HTMLSpanElement | null;
+
+                const recurringIdInput = root.querySelector(
+                    "#recurringEditId",
+                ) as HTMLInputElement | null;
+                const accountSelect = root.querySelector(
+                    "#recurringEditAccountId",
+                ) as HTMLSelectElement | null;
+                const accountHidden = root.querySelector(
+                    "#recurringAccountIdHidden",
+                ) as HTMLInputElement | null;
+                const description = root.querySelector(
+                    "#recurringEditDescription",
+                ) as HTMLInputElement | null;
+                const tagsHidden = root.querySelector(
+                    "#recurringTagsHidden",
+                ) as HTMLInputElement | null;
+                const tagsDropdownRoots = root.querySelectorAll(
+                    "[data-tags-dropdown-root]",
+                ) as NodeListOf<HTMLDivElement>;
+
+                const frequencySelect = root.querySelector(
+                    "#recurringEditFrequency",
+                ) as HTMLSelectElement | null;
+                const dayOfWeek = root.querySelector(
+                    "#recurringEditDayOfWeek",
+                ) as HTMLSelectElement | null;
+                const dayOfMonth = root.querySelector(
+                    "#recurringEditDayOfMonth",
+                ) as HTMLInputElement | null;
+                const month = root.querySelector(
+                    "#recurringEditMonth",
+                ) as HTMLSelectElement | null;
+                const timeOfDay = root.querySelector(
+                    "#recurringEditTimeOfDay",
+                ) as HTMLInputElement | null;
+                const startDate = root.querySelector(
+                    "#recurringEditStartDate",
+                ) as HTMLInputElement | null;
+                const endDate = root.querySelector(
+                    "#recurringEditEndDate",
+                ) as HTMLInputElement | null;
+                const maxOccurrences = root.querySelector(
+                    "#recurringEditMaxOccurrences",
+                ) as HTMLInputElement | null;
+                const amount = root.querySelector(
+                    "#amount",
+                ) as HTMLInputElement | null; /* keep original component id */
+                const dayOfWeekContainer = root.querySelector(
+                    "#recurringEditDayOfWeekContainer",
+                ) as HTMLDivElement | null;
+                const dayOfMonthContainer = root.querySelector(
+                    "#recurringEditDayOfMonthContainer",
+                ) as HTMLDivElement | null;
+                const monthContainer = root.querySelector(
+                    "#recurringEditMonthContainer",
+                ) as HTMLDivElement | null;
+                const timeOfDayContainer = root.querySelector(
+                    "#recurringEditTimeOfDayContainer",
+                ) as HTMLDivElement | null;
+                const endDateContainer = root.querySelector(
+                    "#recurringEditEndDateContainer",
+                ) as HTMLDivElement | null;
+                const maxOccurrencesContainer = root.querySelector(
+                    "#recurringEditMaxOccurrencesContainer",
+                ) as HTMLDivElement | null;
+
+                function hideAllFrequencyFields() {
+                    dayOfWeekContainer?.classList.add("hidden");
+                    dayOfMonthContainer?.classList.add("hidden");
+                    monthContainer?.classList.add("hidden");
+                    timeOfDayContainer?.classList.add("hidden");
+                }
+
+                function hideAllEndConditionFields() {
+                    endDateContainer?.classList.add("hidden");
+                    maxOccurrencesContainer?.classList.add("hidden");
+                }
+
+                const openModal = (rt: any) => {
+                    try {
+                        if (rt) {
+                            recurringIdInput &&
+                                (recurringIdInput.value = String(rt.id ?? ""));
+
+                            // account read-only handling
+                            if (accountSelect) {
+                                accountSelect.value = String(
+                                    rt.accountId ?? "",
+                                );
+                                accountSelect.disabled = true;
+                                accountHidden &&
+                                    (accountHidden.value = String(
+                                        rt.accountId ?? "",
+                                    ));
+                            }
+
+                            description &&
+                                (description.value = rt.description ?? "");
+                            amount && (amount.value = String(rt.amount ?? ""));
+
+                            // type radios
+                            if (rt.type) {
+                                const radios = Array.from(
+                                    root.querySelectorAll('input[name="type"]'),
+                                ) as HTMLInputElement[];
+                                const matching = radios.find(
+                                    (r) => r.value === rt.type,
+                                );
+                                if (matching) matching.checked = true;
+                            }
+
+                            if (frequencySelect) {
+                                frequencySelect.value = rt.frequency || "";
+                                frequencySelect.dispatchEvent(
+                                    new Event("change"),
+                                );
+                            }
+
+                            // end condition preference: endDate > maxOccurrences > never
+                            try {
+                                const neverRadio = root.querySelector(
+                                    "#recurringEditEndConditionNever",
+                                ) as HTMLInputElement | null;
+                                const endDateRadio = root.querySelector(
+                                    "#recurringEditEndConditionEndDate",
+                                ) as HTMLInputElement | null;
+                                const maxOccRadio = root.querySelector(
+                                    "#recurringEditEndConditionMaxOccurrences",
+                                ) as HTMLInputElement | null;
+                                if (rt.endDate) {
+                                    if (endDateRadio) {
+                                        endDateRadio.checked = true;
+                                        endDateRadio.dispatchEvent(
+                                            new Event("change"),
+                                        );
+                                    }
+                                } else if (rt.maxOccurrences) {
+                                    if (maxOccRadio) {
+                                        maxOccRadio.checked = true;
+                                        maxOccRadio.dispatchEvent(
+                                            new Event("change"),
+                                        );
+                                    }
+                                } else {
+                                    if (neverRadio) {
+                                        neverRadio.checked = true;
+                                        neverRadio.dispatchEvent(
+                                            new Event("change"),
+                                        );
+                                    }
+                                }
+                            } catch (e) {}
+
+                            if (
+                                dayOfWeek &&
+                                rt.dayOfWeek !== null &&
+                                rt.dayOfWeek !== undefined
+                            )
+                                dayOfWeek.value = String(rt.dayOfWeek);
+                            if (
+                                dayOfMonth &&
+                                rt.dayOfMonth !== null &&
+                                rt.dayOfMonth !== undefined
+                            )
+                                dayOfMonth.value = String(rt.dayOfMonth);
+                            if (month && rt.month !== null && rt.month !== undefined) {
+                                // rt.month may be a number, numeric string, or strings like "1 January".
+                                const raw = rt.month;
+                                if (typeof raw === 'number') {
+                                    month.value = String(raw);
+                                } else if (typeof raw === 'string') {
+                                    // Try to extract leading number (e.g. "1 January") and use that as the option value
+                                    const m = raw.match(/^\s*(\d{1,2})\b/);
+                                    if (m) month.value = m[1];
+                                    else month.value = String(raw);
+                                } else {
+                                    month.value = String(raw);
+                                }
+                            }
+                            if (timeOfDay) timeOfDay.value = rt.timeOfDay ?? "";
+
+                            // startDate should be set from the record (per your instruction)
+                            if (startDate) {
+                                if (rt.startDate) {
+                                    const sd = new Date(rt.startDate);
+                                    startDate.value = sd
+                                        .toISOString()
+                                        .split("T")[0];
+                                } else {
+                                    const today = new Date();
+                                    startDate.value = today
+                                        .toISOString()
+                                        .split("T")[0];
+                                }
+                            }
+
+                            if (endDate && rt.endDate) {
+                                const ed = new Date(rt.endDate);
+                                endDate.value = ed.toISOString().split("T")[0];
+                            }
+                            if (maxOccurrences && rt.maxOccurrences)
+                                maxOccurrences.value = String(
+                                    rt.maxOccurrences,
+                                );
+                            // Category: prefer querying inside the recurringEdit wrapper
+                            try {
+                                // user provided exact id: #recurringEditcategoryId
+                                const recurringWrapper = root.querySelector(
+                                    '#recurringEdit',
+                                ) as HTMLElement | null;
+                                const categorySelect = recurringWrapper
+                                    ? (recurringWrapper.querySelector(
+                                          '#recurringEditcategoryId',
+                                      ) as HTMLSelectElement | null)
+                                    : (root.querySelector(
+                                          '#recurringEditcategoryId',
+                                      ) as HTMLSelectElement | null);
+                                if (categorySelect)
+                                    categorySelect.value = rt.categoryId
+                                        ? String(rt.categoryId)
+                                        : '';
+                            } catch (e) {
+                                /* non-fatal */
+                            }
+
+                            // Tags: same resolution logic as EditTransactionModal
+                            try {
+                                let tagsArray: string[] = [];
+                                if (Array.isArray(rt.tags) && rt.tags.length > 0) {
+                                    const first = rt.tags[0];
+                                    if (
+                                        typeof first === 'number' ||
+                                        (typeof first === 'string' &&
+                                            String(first).match(/^\d+$/))
+                                    ) {
+                                        const resolved: string[] = [];
+                                        const unresolved: any[] = [];
+                                        tagsDropdownRoots.forEach((rootEl) => {
+                                            const list = rootEl.querySelector(
+                                                "div[id$='DropdownList']",
+                                            ) as HTMLDivElement | null;
+                                            if (!list) return;
+
+                                            rt.tags.forEach((tagId: any) => {
+                                                const selector = `[data-tag-id='${tagId}']`;
+                                                const el = list.querySelector(
+                                                    selector,
+                                                ) as HTMLDivElement | null;
+                                                if (el) {
+                                                    const nameAttr = el.getAttribute(
+                                                        'data-tag-name',
+                                                    );
+                                                    if (
+                                                        nameAttr &&
+                                                        !resolved.includes(nameAttr)
+                                                    )
+                                                        resolved.push(nameAttr);
+                                                } else {
+                                                    // mark unresolved for later
+                                                    if (!unresolved.includes(tagId))
+                                                        unresolved.push(tagId);
+                                                }
+                                            });
+                                        });
+
+                                        if (unresolved.length > 0)
+                                            console.error(
+                                                'Unresolved tag ids while opening recurring edit modal:',
+                                                unresolved,
+                                            );
+
+                                        tagsArray = resolved;
+                                    } else {
+                                        tagsArray = rt.tags.map((t: any) =>
+                                            typeof t === 'string' ? t : t.name,
+                                        );
+                                    }
+                                }
+
+                                tagsHidden && (tagsHidden.value = tagsArray.join(', '));
+
+                                // Update dropdown UI if present (label and checks)
+                                tagsDropdownRoots.forEach((rootEl) => {
+                                    const labelSpan = rootEl.querySelector(
+                                        "span[id$='DropdownLabel']",
+                                    ) as HTMLSpanElement | null;
+                                    const list = rootEl.querySelector(
+                                        "div[id$='DropdownList']",
+                                    ) as HTMLDivElement | null;
+                                    if (!labelSpan || !list) return;
+
+                                    labelSpan.textContent =
+                                        tagsArray.length > 0
+                                            ? tagsArray.join(', ')
+                                            : 'Select tags';
+
+                                    list.querySelectorAll('[data-tag-name]').forEach(
+                                        (item) => {
+                                            const el = item as HTMLDivElement;
+                                            const nameAttr = el.getAttribute(
+                                                'data-tag-name',
+                                            );
+                                            const checkSpan = el.querySelector(
+                                                'span.check-tag',
+                                            ) as HTMLSpanElement | null;
+                                            if (!checkSpan) return;
+                                            if (nameAttr && tagsArray.includes(nameAttr)) {
+                                                checkSpan.classList.remove('hidden');
+                                            } else {
+                                                checkSpan.classList.add('hidden');
+                                            }
+                                        },
+                                    );
+                                });
+                            } catch (e) {
+                                console.error('Tags resolution error', e);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(
+                            "Error prefilling edit recurring modal",
+                            e,
+                        );
+                    }
+
+                    if (modal) {
+                        modal.classList.remove("hidden");
+                        modal.classList.add("flex");
+                        document.body.style.overflow = "hidden";
+                        description?.focus && description.focus();
+                    }
+                };
+
+                const closeModal = () => {
+                    modal?.classList.add("hidden");
+                    modal?.classList.remove("flex");
+                    document.body.style.overflow = "auto";
+                    resetForm();
+                };
+
+                const resetForm = () => {
+                    form?.reset();
+                    recurringIdInput && (recurringIdInput.value = "");
+                    if (accountSelect) accountSelect.disabled = false;
+                    accountHidden && (accountHidden.value = "");
+                    if (startDate) {
+                        const today = new Date();
+                        startDate.value = today.toISOString().split("T")[0];
+                    }
+                    if (timeOfDay) timeOfDay.value = "09:00";
+                    hideAllEndConditionFields();
+                    const neverRadio = root.querySelector(
+                        "#recurringEditEndConditionNever",
+                    ) as HTMLInputElement | null;
+                    if (neverRadio) neverRadio.checked = true;
+                    // reset tags UI
+                    tagsDropdownRoots.forEach((r: any) => {
+                        if (typeof r.resetTags === "function")
+                            try {
+                                r.resetTags();
+                            } catch (e) {}
+                    });
+                };
+
+                closeModalButton?.addEventListener("click", closeModal);
+                cancelBtn?.addEventListener("click", closeModal);
+
+                form?.addEventListener("submit", async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(form as HTMLFormElement);
+                    const csrfInput = document.querySelector(
+                        'input[name="_csrf_token"]',
+                    ) as HTMLInputElement | null;
+                    if (csrfInput && csrfInput.value)
+                        formData.set("_csrf_token", csrfInput.value);
+
+                    // ensure accountId present when select was disabled
+                    if (
+                        accountSelect &&
+                        accountSelect.disabled &&
+                        accountHidden
+                    ) {
+                        formData.set(
+                            "accountId",
+                            accountHidden.value || accountSelect.value,
+                        );
+                    }
+
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitSpinner?.classList.remove("hidden");
+                    }
+
+                    try {
+                        const { actions } = await import("astro:actions");
+                        const result =
+                            await actions.updateRecurringTransaction(formData);
+                        if (result?.data?.ok) window.location.reload();
+                        else {
+                            const { ToastService } = await import(
+                                "@lib/toast.ts"
+                            );
+                            ToastService.showToast({
+                                type: "error",
+                                message:
+                                    (result && result.data?.error) ||
+                                    "Failed to update recurring transaction",
+                            });
+                        }
+                    } catch (error) {
+                        const { ToastService } = await import("@lib/toast.ts");
+                        ToastService.showToast({
+                            type: "error",
+                            message: "An error occurred. Please try again.",
+                        });
+                        console.error(
+                            "Error updating recurring transaction:",
+                            error,
+                        );
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitSpinner?.classList.add("hidden");
+                        }
+                    }
+                });
+
+                // preserve localStorage behavior for account select
+                accountSelect?.addEventListener("change", () => {
+                    try {
+                        window.localStorage.setItem(
+                            "selectedAccountId",
+                            (accountSelect as HTMLSelectElement).value,
+                        );
+                    } catch (e) {}
+                });
+
+                frequencySelect?.addEventListener(
+                    "change",
+                    function (this: HTMLSelectElement) {
+                        hideAllFrequencyFields();
+                        const val = this.value;
+                        if (val && val !== "")
+                            timeOfDayContainer?.classList.remove("hidden");
+                        if (val === "Weekly")
+                            dayOfWeekContainer?.classList.remove("hidden");
+                        else if (val === "Monthly")
+                            dayOfMonthContainer?.classList.remove("hidden");
+                        else if (val === "Yearly") {
+                            dayOfMonthContainer?.classList.remove("hidden");
+                            monthContainer?.classList.remove("hidden");
+                        }
+                    },
+                );
+
+                const endConditionRadios = root.querySelectorAll(
+                    'input[name="endCondition"]',
+                ) as NodeListOf<HTMLInputElement>;
+                endConditionRadios.forEach((radio) => {
+                    radio.addEventListener(
+                        "change",
+                        function (this: HTMLInputElement) {
+                            hideAllEndConditionFields();
+                            const v = this.value;
+                            if (v === "endDate")
+                                endDateContainer?.classList.remove("hidden");
+                            else if (v === "maxOccurrences")
+                                maxOccurrencesContainer?.classList.remove(
+                                    "hidden",
+                                );
+                        },
+                    );
+                });
+
+                (this as any).openModal = openModal;
+                (this as any).closeModal = closeModal;
+                (this as any).resetForm = resetForm;
+            }
+        }
+
+        if (!customElements.get("edit-recurring-transaction-modal")) {
+            customElements.define(
+                "edit-recurring-transaction-modal",
+                EditRecurringTransactionModal,
+            );
+        }
+    </script>
+</edit-recurring-transaction-modal>

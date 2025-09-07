@@ -2,6 +2,7 @@
 import Layout from "@layouts/Layout.astro";
 import Header from "@comps/layout/Header.astro";
 import RecurringTransactionModal from "@comps/recurring/RecurringTransactionModal.astro";
+import EditRecurringTransactionModal from "@comps/recurring/EditRecurringTransactionModal.astro";
 import DeleteConfirmModal from "@comps/DeleteConfirmModal.astro";
 import ConfirmationModal from "@comps/ConfirmationModal.astro";
 import { actions } from "astro:actions";
@@ -10,7 +11,7 @@ import JoinFamily from "@comps/layout/JoinFamily.astro";
 import CreateAccount from "@comps/layout/CreateAccount.astro";
 import TransactionIcon from "@comps/svgs/mono/TransactionIcon.astro";
 import Loop from "@comps/svgs/mono/Loop.astro";
-import { RECURRING_STATUS_COLORS, RECURRING_TEXT_COLORS } from "@arrays.d.ts";
+import { RECURRING_STATUS_COLORS } from "@arrays.d.ts";
 import PlusButton from "@comps/PlusButton.astro";
 
 const user = Astro.locals.user;
@@ -407,7 +408,45 @@ function getStatusText(startDate: string, endDate: string | null): string {
                                                     type="button"
                                                     class="edit-btn bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-white transition duration-200 text-sm"
                                                     data-recurring-transaction={JSON.stringify(
-                                                        recurringTransaction,
+                                                        {
+                                                            ...(({
+                                                                id,
+                                                                accountId,
+                                                                description,
+                                                                amount,
+                                                                type,
+                                                                frequency,
+                                                                dayOfWeek,
+                                                                dayOfMonth,
+                                                                month,
+                                                                timeOfDay,
+                                                                startDate,
+                                                                endDate,
+                                                                maxOccurrences,
+                                                                categoryId,
+                                                                tags,
+                                                            }) => ({
+                                                                id,
+                                                                accountId,
+                                                                description,
+                                                                amount,
+                                                                type,
+                                                                frequency,
+                                                                dayOfWeek,
+                                                                dayOfMonth,
+                                                                month,
+                                                                timeOfDay,
+                                                                startDate,
+                                                                endDate,
+                                                                maxOccurrences,
+                                                                categoryId,
+                                                                tags: tags?.map(
+                                                                    (t) => t.id,
+                                                                ),
+                                                            }))(
+                                                                recurringTransaction,
+                                                            ),
+                                                        },
                                                     )}
                                                     title="Edit recurring transaction"
                                                 >
@@ -520,6 +559,7 @@ function getStatusText(startDate: string, endDate: string | null): string {
     </main>
 
     <RecurringTransactionModal id="recurringTransactionModal" />
+    <EditRecurringTransactionModal id="editRecurringTransactionModal" />
     <DeleteConfirmModal title="Delete Recurring Transaction" />
     <ConfirmationModal variant="info" />
 
@@ -533,6 +573,9 @@ function getStatusText(startDate: string, endDate: string | null): string {
         ) as HTMLButtonElement;
         const recurringModal = document.getElementById(
             "recurringTransactionModal",
+        ) as any;
+        const editRecurringModal = document.getElementById(
+            "editRecurringTransactionModal",
         ) as any;
         if (addRecurringTransactionBtn) {
             addRecurringTransactionBtn.addEventListener("click", function () {
@@ -555,7 +598,13 @@ function getStatusText(startDate: string, endDate: string | null): string {
                 const recurringTransaction = JSON.parse(
                     recurringTransactionData,
                 );
+                // prefer the dedicated edit modal instance for editing
                 if (
+                    editRecurringModal &&
+                    typeof editRecurringModal.openModal === "function"
+                ) {
+                    editRecurringModal.openModal(recurringTransaction);
+                } else if (
                     recurringModal &&
                     typeof recurringModal.fillFormForEdit === "function"
                 ) {

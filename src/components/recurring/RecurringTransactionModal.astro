@@ -9,10 +9,15 @@ import Category from "@comps/transaction/Category.astro";
 import { getCurrentDate } from "@lib/date-utils";
 import TagsDropdownSelect from "@comps/tags/TagsDropdownSelect.astro";
 import ScriptSelect from "@comps/accounts/ScriptSelect.astro";
-const modalId = Astro.props.id ?? null;
+
+interface Props {
+    id: string;
+}
+
+const { id } = Astro.props as Props;
 ---
 
-<recurring-transaction-modal id={modalId ?? undefined}>
+<recurring-transaction-modal id={id}>
     <div
         class="modal-root fixed inset-0 bg-black/50 hidden items-center justify-center z-50"
     >
@@ -41,14 +46,6 @@ const modalId = Astro.props.id ?? null;
                 id="recurringTransactionForm"
                 class="p-6 flex flex-col gap-y-6"
             >
-                <input
-                    type="hidden"
-                    name="_action"
-                    id="recurringFormAction"
-                    value="create"
-                />
-                <input type="hidden" name="id" id="recurringId" />
-
                 <!-- Account and Name -->
                 <div class="flex items-center gap-x-4 justify-center">
                     <Account id="recurringAccountId" />
@@ -360,12 +357,6 @@ const modalId = Astro.props.id ?? null;
             const formTitle = root.querySelector(
                 "#recurringModalTitle",
             ) as HTMLHeadingElement;
-            const formAction = root.querySelector(
-                "#recurringFormAction",
-            ) as HTMLInputElement;
-            const recurringTransactionId = root.querySelector(
-                "#recurringId",
-            ) as HTMLInputElement;
             const submitText = root.querySelector(
                 "#recurringSubmitBtnText",
             ) as HTMLSpanElement;
@@ -525,8 +516,6 @@ const modalId = Astro.props.id ?? null;
             const resetForm = async () => {
                 if (formTitle)
                     formTitle.textContent = "Add Recurring Transaction";
-                if (formAction) formAction.value = "create";
-                if (recurringTransactionId) recurringTransactionId.value = "";
                 if (submitText)
                     submitText.textContent = "Add Recurring Transaction";
                 if (form) form.reset();
@@ -573,30 +562,18 @@ const modalId = Astro.props.id ?? null;
                     if (csrfInput && csrfInput.value) {
                         formData.set("_csrf_token", csrfInput.value);
                     }
-                    const action = formData.get("_action") as string;
                     const { actions } = await import("astro:actions");
-
                     try {
-                        let result;
-                        if (action === "create") {
-                            result =
-                                await actions.createRecurringTransaction(
-                                    formData,
-                                );
-                        } else if (action === "update") {
-                            result =
-                                await actions.updateRecurringTransaction(
-                                    formData,
-                                );
-                        }
+                        const result =
+                            await actions.createRecurringTransaction(formData);
 
                         if (result?.data?.ok) {
                             const { ToastService } = await import(
                                 "@lib/toast.ts"
                             );
-                            const message =
-                                "Recurring transaction updated successfully!";
-                            ToastService.success(message);
+                            ToastService.success(
+                                "Recurring transaction created successfully!",
+                            );
                             closeModal();
                             // Reload the page to show updated data
                             window.location.reload();
@@ -604,14 +581,13 @@ const modalId = Astro.props.id ?? null;
                             const { ToastService } = await import(
                                 "@lib/toast.ts"
                             );
-                            const message =
-                                "Failed to update recurring transaction. Please try again.";
                             ToastService.showToast({
                                 type: "error",
-                                message,
+                                message:
+                                    "Failed to create recurring transaction. Please try again.",
                             });
                             console.error(
-                                "Recurring transaction operation failed:",
+                                "Recurring transaction creation failed:",
                                 result?.error || result?.data?.error,
                             );
                         }
@@ -653,119 +629,10 @@ const modalId = Astro.props.id ?? null;
                 startDateInput.value = today.toISOString().split("T")[0];
             }
 
-            // expose instance methods
+            // expose instance methods (modal only supports create)
             (this as any).openModal = openModal;
             (this as any).closeModal = closeModal;
             (this as any).resetForm = resetForm;
-            (this as any).fillFormForEdit = async (
-                recurringTransaction: any,
-            ) => {
-                const accountId = root.querySelector(
-                    "#accountId",
-                ) as HTMLSelectElement;
-                const type = root.querySelector(
-                    "#recurringType",
-                ) as HTMLSelectElement;
-                const description = root.querySelector(
-                    "#description",
-                ) as HTMLInputElement;
-                const amount = root.querySelector(
-                    "#amount",
-                ) as HTMLInputElement;
-                const frequency = root.querySelector(
-                    "#frequency",
-                ) as HTMLSelectElement;
-                const dayOfWeek = root.querySelector(
-                    "#dayOfWeek",
-                ) as HTMLSelectElement;
-                const dayOfMonth = root.querySelector(
-                    "#dayOfMonth",
-                ) as HTMLInputElement;
-                const month = root.querySelector("#month") as HTMLSelectElement;
-                const timeOfDay = root.querySelector(
-                    "#timeOfDay",
-                ) as HTMLInputElement;
-                const startDate = root.querySelector(
-                    "#startDate",
-                ) as HTMLInputElement;
-                const endDate = root.querySelector(
-                    "#endDate",
-                ) as HTMLInputElement;
-                const maxOccurrences = root.querySelector(
-                    "#maxOccurrences",
-                ) as HTMLInputElement;
-                const categoryId = root.querySelector(
-                    "#categoryId",
-                ) as HTMLSelectElement;
-                const tagsInput = root.querySelector(
-                    "#recurringTags",
-                ) as HTMLInputElement;
-
-                if (recurringTransactionId)
-                    recurringTransactionId.value = recurringTransaction.id;
-                if (submitText)
-                    submitText.textContent = "Update Recurring Transaction";
-                if (accountId) accountId.value = recurringTransaction.accountId;
-                if (type) type.value = recurringTransaction.type;
-                if (description)
-                    description.value = recurringTransaction.description;
-                if (amount) amount.value = recurringTransaction.amount;
-                if (frequency) {
-                    frequency.value = recurringTransaction.frequency;
-                    frequency.dispatchEvent(new Event("change"));
-                }
-                if (dayOfWeek && recurringTransaction.dayOfWeek !== null)
-                    dayOfWeek.value = recurringTransaction.dayOfWeek;
-                if (dayOfMonth && recurringTransaction.dayOfMonth !== null)
-                    dayOfMonth.value = recurringTransaction.dayOfMonth;
-                if (month && recurringTransaction.month !== null)
-                    month.value = recurringTransaction.month;
-                if (timeOfDay) timeOfDay.value = recurringTransaction.timeOfDay;
-                if (startDate) {
-                    const startDateObj = new Date(
-                        recurringTransaction.startDate,
-                    );
-                    startDate.value = startDateObj.toISOString().split("T")[0];
-                }
-                if (categoryId)
-                    categoryId.value = recurringTransaction.categoryId || "";
-
-                let endCondition = "never";
-                if (recurringTransaction.endDate) {
-                    endCondition = "endDate";
-                    if (endDate) {
-                        const endDateObj = new Date(
-                            recurringTransaction.endDate,
-                        );
-                        endDate.value = endDateObj.toISOString().split("T")[0];
-                    }
-                } else if (recurringTransaction.maxOccurrences) {
-                    endCondition = "maxOccurrences";
-                    if (maxOccurrences)
-                        maxOccurrences.value =
-                            recurringTransaction.maxOccurrences;
-                }
-
-                const endConditionRadio = root.querySelector(
-                    `input[name="endCondition"][value="${endCondition}"]`,
-                ) as HTMLInputElement;
-                if (endConditionRadio) {
-                    endConditionRadio.checked = true;
-                    endConditionRadio.dispatchEvent(new Event("change"));
-                }
-
-                if (formTitle)
-                    formTitle.textContent = "Edit Recurring Transaction";
-                if (formAction) formAction.value = "update";
-
-                if (tagsInput && Array.isArray(recurringTransaction.tags)) {
-                    tagsInput.value = recurringTransaction.tags
-                        .map((t: any) => t.name)
-                        .join(", ");
-                }
-
-                openModal();
-            };
         }
     }
 
