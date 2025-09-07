@@ -11,6 +11,7 @@ import JoinFamily from "@comps/layout/JoinFamily.astro";
 import CreateAccount from "@comps/layout/CreateAccount.astro";
 import TransactionIcon from "@comps/svgs/mono/TransactionIcon.astro";
 import Loop from "@comps/svgs/mono/Loop.astro";
+import Bin from "@comps/svgs/mono/Bin.astro";
 import { RECURRING_STATUS_COLORS } from "@arrays.d.ts";
 import PlusButton from "@comps/PlusButton.astro";
 
@@ -173,6 +174,14 @@ function getStatusText(startDate: string, endDate: string | null): string {
                                 <TransactionIcon class="w-4 h-4" />
                                 <span>Transactions</span>
                             </a>
+                            <a
+                                href="/recurring/deleted"
+                                class="text-purple-400 hover:text-purple-300 flex items-center gap-2"
+                                title="Deleted recurring rules"
+                            >
+                                <Bin class="w-4 h-4" />
+                                <span>Deleted</span>
+                            </a>
                         </div>
                         <div class="flex items-center gap-4">
                             <button
@@ -233,6 +242,25 @@ function getStatusText(startDate: string, endDate: string | null): string {
                                                                     recurringTransaction.frequency
                                                                 }
                                                             </span>
+                                                        </div>
+
+                                                        <!-- Inline date summary: start / end / next -->
+                                                        <div class="flex items-center gap-3 mt-2 flex-wrap">
+                                                            <div class="text-xs text-gray-400">
+                                                                <span class="font-medium text-gray-300">Start:</span>
+                                                                <span class="ml-1">{formatDate(recurringTransaction.startDate, { includeTime: false })}</span>
+                                                            </div>
+                                                            {recurringTransaction.endDate && (
+                                                                <div class="text-xs text-gray-400">
+                                                                    <span class="font-medium text-gray-300">Ends:</span>
+                                                                    <span class="ml-1">{formatDate(recurringTransaction.endDate, { includeTime: false })}</span>
+                                                                </div>
+                                                            )}
+                                                            {recurringTransaction.nextExecution && (
+                                                                <div class="text-xs text-yellow-400 font-medium">
+                                                                    Next: {formatDate(recurringTransaction.nextExecution.toISOString().replace("T", " ").split(".")[0], { includeTime: false })}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                     <div
@@ -474,9 +502,6 @@ function getStatusText(startDate: string, endDate: string | null): string {
                                                     data-recurring-id={
                                                         recurringTransaction.id
                                                     }
-                                                    data-recurring-description={
-                                                        recurringTransaction.description
-                                                    }
                                                 >
                                                     Delete
                                                 </button>
@@ -636,6 +661,13 @@ function getStatusText(startDate: string, endDate: string | null): string {
                             const formData = new FormData();
                             formData.append("id", recurringId);
 
+                            const csrfInput = document.querySelector(
+                                'input[name="_csrf_token"]',
+                            ) as HTMLInputElement;
+                            if (csrfInput && csrfInput.value) {
+                                formData.append("_csrf_token", csrfInput.value);
+                            }
+
                             const result =
                                 await actions.deleteRecurringTransaction(
                                     formData,
@@ -650,7 +682,9 @@ function getStatusText(startDate: string, endDate: string | null): string {
                             } else {
                                 console.error(
                                     "Recurring transaction deletion failed:",
-                                    result.error || result.data?.error,
+                                    result,
+                                    result?.data,
+                                    result?.error,
                                 );
                                 ToastService.showToast({
                                     type: "error",
@@ -662,6 +696,7 @@ function getStatusText(startDate: string, endDate: string | null): string {
                             console.error(
                                 "Error deleting recurring transaction:",
                                 error,
+                                (error as any)?.stack ?? null,
                             );
                             ToastService.showToast({
                                 type: "error",
@@ -716,7 +751,9 @@ function getStatusText(startDate: string, endDate: string | null): string {
                             } else {
                                 console.error(
                                     "Recurring transaction generation failed:",
-                                    result.error || result.data?.error,
+                                    result,
+                                    result?.data,
+                                    result?.error,
                                 );
                                 ToastService.showToast({
                                     type: "error",
@@ -728,6 +765,7 @@ function getStatusText(startDate: string, endDate: string | null): string {
                             console.error(
                                 "Error generating recurring transactions:",
                                 error,
+                                (error as any)?.stack ?? null,
                             );
                             ToastService.showToast({
                                 type: "error",

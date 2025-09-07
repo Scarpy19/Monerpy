@@ -20,6 +20,10 @@ import {
     getRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
+    restoreRecurringTransaction,
+    purgeRecurringTransaction,
+    bulkRestoreRecurring,
+    bulkPurgeRecurring,
     generateRecurringTransactions
 } from "./recurring/index.ts";
 import {
@@ -89,6 +93,10 @@ const server = {
     getRecurringTransaction,
     updateRecurringTransaction,
     deleteRecurringTransaction,
+    restoreRecurringTransaction,
+    purgeRecurringTransaction,
+    bulkRestoreRecurring,
+    bulkPurgeRecurring,
     generateRecurringTransactions,
     createFamily,
     joinFamily,

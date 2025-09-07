@@ -11,7 +11,8 @@ const getRecurringTransactions = defineAction({
         categoryId: z.number().optional(),
         type: z.enum(['Income', 'Expense']).optional(),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']).optional(),
-        status: z.enum(['active', 'completed', 'paused']).optional()
+        status: z.enum(['active', 'completed', 'paused']).optional(),
+        includeDeleted: z.boolean().optional().default(false)
     }),
     handler: async (input, context) => {
         try {
@@ -31,7 +32,7 @@ const getRecurringTransactions = defineAction({
             }
 
             const where: any = {
-                deletedAt: null,
+                ...(input.includeDeleted ? {} : { deletedAt: null }),
                 account: {
                     familyId: userWithFamily.familyId,
                     deletedAt: null
