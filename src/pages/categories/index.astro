@@ -161,6 +161,8 @@ const childCategories = categories.filter((cat) => cat.parentId) || [];
     <DeleteConfirmModal title="Delete Category" />
 
     <script>
+        import { ToastService } from "@lib/toast.ts";
+
         document.addEventListener("DOMContentLoaded", () => {
             // Check for stored toast messages from previous operations
             const storedToast = sessionStorage.getItem("categoryToast");
@@ -187,15 +189,7 @@ const childCategories = categories.filter((cat) => cat.parentId) || [];
                 const customEvent = event as CustomEvent;
                 console.log("Category updated:", customEvent.detail);
 
-                // Store success message in sessionStorage to show after refresh
-                sessionStorage.setItem(
-                    "categoryToast",
-                    JSON.stringify({
-                        message: "Category updated successfully!",
-                        type: "success",
-                    }),
-                );
-
+                ToastService.success("Category updated successfully!");
                 // Refresh immediately to show changes
                 location.reload();
             });
@@ -204,14 +198,7 @@ const childCategories = categories.filter((cat) => cat.parentId) || [];
                 const customEvent = event as CustomEvent;
                 console.log("Category created:", customEvent.detail);
 
-                // Store success message in sessionStorage to show after refresh
-                sessionStorage.setItem(
-                    "categoryToast",
-                    JSON.stringify({
-                        message: "Category created successfully!",
-                        type: "success",
-                    }),
-                );
+                ToastService.success("Category created successfully!");
 
                 // Refresh immediately to show changes
                 location.reload();
@@ -221,14 +208,7 @@ const childCategories = categories.filter((cat) => cat.parentId) || [];
                 const customEvent = event as CustomEvent;
                 console.log("Category deleted:", customEvent.detail);
 
-                // Store success message in sessionStorage to show after refresh
-                sessionStorage.setItem(
-                    "categoryToast",
-                    JSON.stringify({
-                        message: "Category deleted successfully!",
-                        type: "success",
-                    }),
-                );
+                ToastService.success("Category deleted successfully!");
 
                 // Refresh immediately to show changes
                 location.reload();
