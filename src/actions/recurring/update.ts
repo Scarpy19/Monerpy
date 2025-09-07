@@ -13,6 +13,7 @@ const updateRecurringTransaction = defineAction({
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
         type: z.enum(['Income', 'Expense']),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']),
+        month: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfMonth: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfWeek: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         timeOfDay: z.string().min(1, "Time of day is required"),
@@ -21,8 +22,6 @@ const updateRecurringTransaction = defineAction({
         endDate: z.string().nullable().optional(),
         maxOccurrences: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
-        newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
-        newCategoryColor: z.string().optional().default("#6172f3")
     }),
     handler: async (input, context) => {
         try {
@@ -83,6 +82,10 @@ const updateRecurringTransaction = defineAction({
             if (input.frequency === 'Yearly' && (input.dayOfMonth === undefined || input.dayOfMonth < 1 || input.dayOfMonth > 31)) {
                 return { ok: false, error: "Day of month is required for yearly frequency (1-31)" };
             }
+            // For yearly frequency, month must also be present (1-12)
+            if (input.frequency === 'Yearly' && (input.month === undefined || input.month < 1 || input.month > 12)) {
+                return { ok: false, error: "Month is required for yearly frequency (1-12)" };
+            }
 
             // Validate end condition
             let endDate = null;
@@ -102,32 +105,6 @@ const updateRecurringTransaction = defineAction({
 
             let categoryId = input.categoryId;
 
-            // Handle new category creation
-            if (input.newCategory && !input.categoryId) {
-                const existingCategory = await prisma.category.findFirst({
-                    where: {
-                        name: input.newCategory,
-                        familyId: userWithFamily.familyId,
-                        deletedAt: null
-                    }
-                });
-
-                if (existingCategory) {
-                    categoryId = existingCategory.id;
-                } else {
-                    const newCategory = await prisma.category.create({
-                        data: {
-                            name: input.newCategory,
-                            color: input.newCategoryColor,
-                            familyId: userWithFamily.familyId,
-                            createdAt: getCurrentDateTime(),
-                            updatedAt: getCurrentDateTime()
-                        }
-                    });
-                    categoryId = newCategory.id;
-                }
-            }
-
             // Update recurring transaction
             const recurringTransaction = await prisma.recurringTransaction.update({
                 where: { id: input.id },
@@ -139,6 +116,7 @@ const updateRecurringTransaction = defineAction({
                     type: input.type,
                     frequency: input.frequency,
                     dayOfMonth: input.dayOfMonth,
+                    month: input.month,
                     dayOfWeek: input.dayOfWeek,
                     timeOfDay: input.timeOfDay,
                     startDate: formatDate(input.startDate, { dateStyle: 'db', includeTime: false }),

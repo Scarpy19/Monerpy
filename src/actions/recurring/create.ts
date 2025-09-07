@@ -12,6 +12,7 @@ const createRecurringTransaction = defineAction({
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
         type: z.enum(['Income', 'Expense']),
         frequency: z.enum(['Daily', 'Weekly', 'Monthly', 'Yearly']),
+        month: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfMonth: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         dayOfWeek: z.string().nullable().optional().transform(val => val && val !== '' ? parseInt(val) : undefined),
         timeOfDay: z.string().min(1, "Time of day is required"),
@@ -62,8 +63,14 @@ const createRecurringTransaction = defineAction({
                 return { ok: false, error: "Day of month is required for monthly frequency (1-31)" };
             }
 
-            if (input.frequency === 'Yearly' && (input.dayOfMonth === undefined || input.dayOfMonth < 1 || input.dayOfMonth > 31)) {
-                return { ok: false, error: "Day of month is required for yearly frequency (1-31)" };
+            if (input.frequency === 'Yearly') {
+                if (input.month === undefined || input.month < 1 || input.month > 12) {
+                    return { ok: false, error: "Month is required for yearly frequency (1-12)" };
+                }
+
+                if (input.dayOfMonth === undefined || input.dayOfMonth < 1 || input.dayOfMonth > 31) {
+                    return { ok: false, error: "Day of month is required for yearly frequency (1-31)" };
+                }
             }
 
             // Validate end condition
@@ -95,6 +102,7 @@ const createRecurringTransaction = defineAction({
                     amount: input.amount,
                     type: input.type,
                     frequency: input.frequency,
+                    month: input.month,
                     dayOfMonth: input.dayOfMonth,
                     dayOfWeek: input.dayOfWeek,
                     timeOfDay: input.timeOfDay,

@@ -14,8 +14,6 @@ const updateTransaction = defineAction({
         amount: z.string().transform(val => parseFloat(val)).refine(val => !isNaN(val) && val > 0, "Amount must be a positive number"),
         type: z.enum(['Income', 'Expense']),
         tags: z.string().nullable().optional().transform(val => val ? val.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0) : []),
-        newCategory: z.string().nullable().optional().transform(val => val?.trim() || undefined),
-        newCategoryColor: z.string().optional().default("#6172f3")
     }),
     handler: async (input, context) => {
         try {
@@ -64,32 +62,6 @@ const updateTransaction = defineAction({
             }
 
             let categoryId = input.categoryId;
-
-            // Handle new category creation
-            if (input.newCategory && !input.categoryId) {
-                const existingCategory = await prisma.category.findFirst({
-                    where: {
-                        name: input.newCategory,
-                        familyId: userWithFamily.familyId,
-                        deletedAt: null
-                    }
-                });
-
-                if (existingCategory) {
-                    categoryId = existingCategory.id;
-                } else {
-                    const newCategory = await prisma.category.create({
-                        data: {
-                            name: input.newCategory,
-                            color: input.newCategoryColor,
-                            familyId: userWithFamily.familyId,
-                            createdAt: getCurrentDateTime(),
-                            updatedAt: getCurrentDateTime()
-                        }
-                    });
-                    categoryId = newCategory.id;
-                }
-            }
 
             // Update transaction
             const transaction = await prisma.transaction.update({
