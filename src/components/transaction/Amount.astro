@@ -1,19 +1,20 @@
 ---
 import Asterisk from "@comps/Asterisk.astro";
 interface Props {
+    id?: string;
     classes?: string;
 }
 
-const { classes }: Props = Astro.props;
+const { classes, id }: Props = Astro.props;
 ---
 
-<label for="amount" class={classes}>
+<label for={`${id}amount`} class={classes}>
     <p class="text-sm font-medium text-gray-200 mb-2">
-        Amount (€) <Asterisk id="amount" />
+        Amount (€) <Asterisk id={`${id}amount`} />
     </p>
     <input
         type="number"
-        id="amount"
+        id={`${id}amount`}
         name="amount"
         required
         min="0.01"

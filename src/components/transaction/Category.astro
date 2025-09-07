@@ -3,10 +3,11 @@ import { actions } from "astro:actions";
 import type { Category, GetCategoriesResult } from "@types.d.ts";
 
 interface Props {
+    id?: string;
     classes?: string;
 }
 
-const { classes } = Astro.props;
+const { classes, id } = Astro.props;
 
 const categoriesResult = await Astro.callAction(actions.getCategories, {});
 
@@ -15,10 +16,10 @@ const typedResult = categoriesResult.data as GetCategoriesResult | undefined;
 const categories: Category[] = typedResult?.ok ? typedResult.categories : [];
 ---
 
-<label for="categoryId" class={classes}>
+<label for={`${id}categoryId`} class={classes}>
     <p class="text-sm font-medium text-gray-300 mb-2">Category</p>
     <select
-        id="categoryId"
+        id={`${id}categoryId`}
         name="categoryId"
         class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
     >

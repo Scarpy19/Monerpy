@@ -3,22 +3,26 @@ import { transactionTypes } from "@arrays.d.ts";
 import Asterisk from "@comps/Asterisk.astro";
 
 interface Props {
+    id?: string;
     classes?: string;
 }
 
-const { classes }: Props = Astro.props;
+const { classes, id } = Astro.props;
 ---
 
 <div class={classes}>
     <span class="block text-sm font-medium text-gray-200 mb-2 cursor-default">
-        Type <Asterisk id="type" /></span
+        Type <Asterisk id={`${id}type`} /></span
     >
     <div class="w-full h-[42px] flex items-center justify-center gap-x-4">
         {
             transactionTypes.map((type) => (
-                <label for={`${type}Type`} class="inline-flex items-center">
+                <label
+                    for={`${id}${type}Type`}
+                    class="inline-flex items-center"
+                >
                     <input
-                        id={`${type}Type`}
+                        id={`${id}${type}Type`}
                         type="radio"
                         name="type"
                         value={type}
